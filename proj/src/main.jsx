@@ -7,7 +7,7 @@ import { useThemeManager } from './stores/ThemeManager'
 import Login from './pages/login.jsx';
 import PageControl from './components/page-control.jsx';
 import Converter from './pages/converter.jsx';
-import Files from './pages/Files.jsx';
+import FileEditor from './pages/Editor.jsx';
 
 
 // Initialize theme on app load from localStorage
@@ -51,7 +51,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/signup" element={<Login />} />
         <Route path="/dashboard" element={<PageControl />} />
         <Route path='/converter' element={<Converter />} />
-        
+        <Route path='/view/editor/:filename' element={<FileEditor />} />
       </Routes>
     </BrowserRouter>
     

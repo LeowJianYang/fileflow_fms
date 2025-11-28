@@ -6,6 +6,8 @@ import parser from 'cookie-parser';
 import cors from 'cors';
 import http from 'http';
 import authRouter from './src/routes/auth.js';
+import fileRoute from './src/routes/files.js';
+import CookieMiddleware from './src/middleware/cookie-auth.js';
 
 const allowedOrigin = process.env.WEB_URL; 
 
@@ -21,10 +23,13 @@ app.use(cors(
         methods:["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allowedHeaders:["Content-Type", "Authorization", "Cookie"],
     }
-));
-
+  ));
+  // app.get("*", (_req,res)=>{
+  //   res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  // });
+  
 app.use('/api/auth', authRouter);
-
+app.use('/api/files', CookieMiddleware ,fileRoute);
 
 
 const PORT = process.env.PORT || 5000;

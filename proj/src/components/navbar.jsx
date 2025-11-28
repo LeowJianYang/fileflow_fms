@@ -46,7 +46,7 @@ export default function Navbar() {
           {user != null && loading!=true ? (
             <>
               <p className='text-gray-900 dark:text-white flex flex-row gap-2 justify-between items-center '><User size={20}/> {user.Username} 
-                <hr className="mx-4 h-6 border-l border-gray-300 dark:border-gray-400"/></p>
+                </p><hr className="mx-4 h-6 border-l border-gray-300 dark:border-gray-400"/>
               <button className='px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white font-medium' onClick={() => handleLogout()}>Logout</button>
             </>
           ):(

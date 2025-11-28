@@ -3,8 +3,8 @@ import { useUserStore } from "../stores/userstore"
 import {  File,CirclePlus, FileUp, X, BarChart3 } from "lucide-react";
 import axios from "axios";
 import { useEffect } from "react";
+import {mimeIconMap} from "../utils/file-icon";
 import fileIcons from "../utils/file-icon";
-
 
 export default function Dashboard() {
 
