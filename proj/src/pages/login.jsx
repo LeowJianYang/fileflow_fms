@@ -4,6 +4,7 @@ import { Mail, Eye, EyeOff, User } from 'lucide-react';
 import { useThemeManager } from '../stores/ThemeManager';
 import { useUserStore } from '../stores/userstore';
 import axios from 'axios';
+import {useAppToast} from '../utils/use-toast'
 
 export default function Login() {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ export default function Login() {
   const theme = useThemeManager((s) => s.theme);
   const login = useUserStore((s)=>s.login);
   const url = import.meta.env.VITE_API_URL;
-
+  
   const isSignUp = location.pathname === '/signup';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,6 +29,8 @@ export default function Login() {
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
+
+  const toast = useAppToast();
 
   // Email validation function
   const validateEmail = (email) => {
@@ -200,7 +203,13 @@ export default function Login() {
       });
       console.log('Sign Up:', { username, email, password });
     } else {
-      await login(email,password);
+      try{
+        await login(email,password);
+        toast.success("Logged in successfully !",{position:"top-center"})
+        
+      } catch (error) {
+        console.error('Error during login:', error);
+      }
     }
   };
 

@@ -41,7 +41,7 @@ export default function Navbar() {
           <button className='px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/conversion', { replace: true })}>Conversion</button>
         </nav>
 
-        {/* Desktop Auth & Theme */}
+        {/* Desktop */}
         <div className='hidden lg:flex flex-row gap-4 items-center justify-end'>
           {user != null && loading!=true ? (
             <>
@@ -61,7 +61,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Menu Toggle */}
+        {/* Mobile Menu  */}
         <div className='flex lg:hidden gap-2 items-center'>
           <button onClick={toggleTheme} className='px-2 py-2 rounded bg-yellow-400 dark:bg-blue-600 hover:bg-yellow-500 dark:hover:bg-blue-700 transition-colors'>
             {theme === 'light' ? <Moon size={18} className="text-gray-900" /> : <Sun size={18} className="text-white" />}
@@ -75,7 +75,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Menu  */}
       {isMenuOpen && (
         <>
           {/* Overlay */}

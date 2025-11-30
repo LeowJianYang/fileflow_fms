@@ -1,20 +1,53 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useUserStore } from "../stores/userstore"
-import {  File,CirclePlus, FileUp, X, BarChart3 } from "lucide-react";
+import {  File,CirclePlus, FileUp, X, BarChart3, FileX2Icon,ArrowRight } from "lucide-react";
 import axios from "axios";
-import { useEffect } from "react";
-import {mimeIconMap} from "../utils/file-icon";
-import fileIcons from "../utils/file-icon";
+import { mimeIconMap,GetIconByFileType } from "../utils/file-icon";
+import FileProcess from "../components/fileProcess";
+import SearchBar from "../components/SearchBar";
+import useHandleFileEdit from "../utils/edit-view-routes.jsx";
 
 export default function Dashboard() {
 
     const user = useUserStore((s) => s.user);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [addModalOpen, setAddModalOpen] = useState(false);
+    const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const url = import.meta.env.VITE_API_URL;
+    const [files, setFiles] = useState([]);
+    const [filteredFiles, setFilteredFiles] = useState([]);
+    const [searchActive, setSearchActive] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const handleFileEdit = useHandleFileEdit();
+
+    const fetchFiles = async () => {
+        try {
+            const response = await axios.get(`${url}/api/files/list`, {
+                params: { userId: user?.UserId },
+                withCredentials: true
+            });
+            setFiles(response.data.files);
+            setFilteredFiles(response.data.files);
+        } catch (error) {
+            console.error("Error fetching files:", error);
+        }
+    };
 
     useEffect(() => {
+        fetchFiles();
+    }, [user?.UserId]);
 
-    });
-
+    // Close search dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (searchActive && !e.target.closest('.search-container')) {
+                setSearchActive(false);
+                setSearchQuery("");
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [searchActive]);
 
     const dummyFiles = [
         { name: "ProjectProposal.docx", modified: "2024-06-10", size: "120 KB" },
@@ -23,12 +56,25 @@ export default function Dashboard() {
         { name: "Presentation.pptx", modified: "2024-06-09", size: "2 MB" },
     ]
 
+    const handleAddModal = () =>{
+        setAddModalOpen(true);
+    }
 
+    const handleSearchResults = (results) => {
+        setFilteredFiles(results);
+        setSearchActive(results.length > 0 || searchQuery.trim().length > 0);
+    };
 
-    // Sidebar Component (reusable for both drawer and desktop)
+    const handleFileClick = (file) => {
+        handleFileEdit(file);
+        setSearchActive(false);
+        setSearchQuery("");
+    };
+
+    // Sidebar Component 
     const SidebarContent = () => (
         <>
-            {/* STORAGE */}
+            {/* STORAGE right hand */}
             <div className="p-4 sm:p-6 bg-white dark:bg-[#111a22] rounded-lg shadow-sm border border-gray-300 dark:border-gray-700">
                 <h2 className="text-xl sm:text-2xl font-bold text-black dark:text-white mb-6">Storage</h2>
                 
@@ -56,7 +102,7 @@ export default function Dashboard() {
                 </div>
             </div>    
             
-            {/* STATISTICS */}
+            {/* STATISTICS right hand bottom */}
             <div className="p-4 sm:p-6 bg-white dark:bg-[#111a22] rounded-lg shadow-sm border border-gray-300 dark:border-gray-700">
                 <h3 className="text-lg sm:text-xl font-semibold text-black dark:text-white mb-4">Statistics</h3>
                 <div className="flex flex-col gap-3 sm:gap-4">
@@ -83,7 +129,7 @@ export default function Dashboard() {
                 ></div>
             )}
 
-            {/* Mobile Drawer */}
+            {/* Mobile  */}
             <div className={`fixed top-0 right-0 h-full w-80 bg-white dark:bg-[#0f1419] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out xl:hidden ${
                 drawerOpen ? 'translate-x-0' : 'translate-x-full'
             }`}>
@@ -105,7 +151,7 @@ export default function Dashboard() {
             </div>
 
             <div className="p-4 sm:p-6 lg:p-8 max-w-[1920px] mx-auto">
-                {/* Header Section */}
+                {/* Header Section -NAV SEC*/}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                     <div className="w-full lg:w-auto lg:pl-0 sm:pl-0">
                         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black dark:text-white">
@@ -116,18 +162,105 @@ export default function Dashboard() {
                         </p> 
                     </div>
                     
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto">
-                        <input 
-                            type="text" 
-                            placeholder="Search..." 
-                            className="border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-2.5 flex-1 sm:flex-none sm:w-48 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#233648] text-gray-900 dark:text-white font-medium text-sm" 
+                    {/* Action Buttons-Pins File Sec */}
+                    <div className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto relative search-container">
+                        <SearchBar
+                            placeholder="Search files and folders..."
+                            onSearchResults={handleSearchResults}
+                            data={files}
+                            searchFields={['filename', 'filetype']}
+                            className='w-full lg:w-[280px]'
+                            onFocus={() => setSearchActive(true)}
                         />
-                        <button className="bg-[#3f8cee] rounded-lg text-white font-semibold px-4 py-2 sm:px-6 sm:py-2.5 hover:opacity-80 transition-all duration-150 ease-in-out cursor-pointer text-sm whitespace-nowrap">
+                        
+                        {/* Search Components */}
+                        {searchActive && (
+                            <div className="absolute top-full mt-2 left-0 right-0 lg:left-0 lg:right-auto lg:w-[400px] bg-white dark:bg-[#1a2332] border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                {/* Header */}
+                                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0f1419]">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            Search Results
+                                        </span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Results */}
+                                <div className="max-h-[400px] overflow-y-auto">
+                                    {filteredFiles.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-12 px-4">
+                                            <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                                <FileX2Icon size={32} className="text-gray-400 dark:text-gray-600"/>
+                                            </div>
+                                            <p className="text-gray-900 dark:text-white font-medium mb-1">No files found</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Try a different search term</p>
+                                        </div>
+                                    ) : (
+                                        <ul className="py-2">
+                                            {filteredFiles.slice(0, 8).map((file, _index) => {
+                                                
+                                                const fileSize = (file.filesize / 1024).toFixed(2);
+                                                const fileExt = file.filename.split('.').pop().toUpperCase();
+                                                
+                                                return (
+                                                    <li 
+                                                        key={file.FileId}
+                                                        onClick={() => handleFileClick(file)}
+                                                        className="group px-4 py-3 hover:bg-blue-50 dark:hover:bg-[#1e2a3a] cursor-pointer transition-all duration-150 border-b border-gray-100 dark:border-gray-800 last:border-0"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            {/* File Icon */}
+                                                            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                                                <GetIconByFileType filetype={file.filetype} size={24} />
+                                                            </div>
+                                                            
+                                                            {/* File Info */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                                                                    {file.filename}
+                                                                </p>
+                                                                <div className="flex items-center gap-2 mt-0.5">
+                                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                        {fileSize} KB
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-400 dark:text-gray-600">•</span>
+                                                                    <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium">
+                                                                        {fileExt}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Arrow Icon */}
+                                                            <div className="text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-1 transition-all">
+                    
+                                                                <ArrowRight size={20} />
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    )}
+                                </div>
+
+                                {/* Footer - Show more if results > 8 */}
+                                {filteredFiles.length > 8 && (
+                                    <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#0f1419]">
+                                        <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                                            Showing 8 of {filteredFiles.length} results
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        <button className="bg-[#3f8cee] rounded-lg text-white font-semibold px-4 py-2 sm:px-6 sm:py-2.5 hover:opacity-80 transition-all duration-150 ease-in-out cursor-pointer text-sm whitespace-nowrap" onClick={()=>{ setUploadModalOpen(true);}}>
                             Upload File
                         </button>
-                        <button className="bg-[#233648] rounded-lg text-white font-semibold px-4 py-2 sm:px-6 sm:py-2.5 hover:opacity-80 transition-all duration-150 ease-in-out cursor-pointer text-sm whitespace-nowrap">
-                            Create Folder
+                        <button className="bg-[#233648] rounded-lg text-white font-semibold px-4 py-2 sm:px-6 sm:py-2.5 hover:opacity-80 transition-all duration-150 ease-in-out cursor-pointer text-sm whitespace-nowrap" onClick={()=>{handleAddModal()}}>
+                            Create File
                         </button>
                         
                         {/* Stats Button - Mobile Only */}
@@ -141,7 +274,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-            {/* Main Content Grid */}
+            {/* Main Content  */}
             <div className="flex flex-col xl:flex-row gap-4 sm:gap-6">
 
                 {/* Left Column - Quick Access & Recent Activity */}
@@ -165,7 +298,7 @@ export default function Dashboard() {
                                                     hover:shadow-md transition-shadow cursor-pointer"
                                     >
                                         <div className="w-10 h-10 sm:w-12 sm:h-12">
-                                            {fileIcons[file.name.split('.').pop()] || <File color="#9ca3af" size={40} className="sm:w-12 sm:h-12"/>}
+                                            {mimeIconMap[file.name.split('.').pop()] || <File color="#9ca3af" size={40} className="sm:w-12 sm:h-12"/>}
                                         </div>
 
                                         <h3 className="font-semibold text-black dark:text-white text-sm sm:text-base text-center">
@@ -211,11 +344,21 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Right Column - Storage & Statistics (Desktop Only) */}
+                {/* Right Column - (Desktop Only) */}
                 <div className="hidden xl:block xl:w-80 2xl:w-96 space-y-4 sm:space-y-6">
                     <SidebarContent />
                 </div>
             </div>
+
+            {/* Modals */}
+            <FileProcess
+                user={user}
+                addModalOpen={addModalOpen}
+                setAddModalOpen={setAddModalOpen}
+                uploadModalOpen={uploadModalOpen}
+                setUploadModalOpen={setUploadModalOpen}
+            />
+
             </div>
         </div>  
     )

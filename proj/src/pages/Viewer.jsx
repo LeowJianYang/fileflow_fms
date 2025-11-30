@@ -1,10 +1,12 @@
 import { useParams } from "react-router-dom";
 import ViewSide, { ViewNavBar } from "../components/ViewSide";
-import EditorTypes from "../components/EditorSetup";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useUserStore } from "../stores/userstore";
 import { Menu, X } from "lucide-react";
+import PDFViewer from "../components/Viewer/pdf-viewer.jsx";
+import VideoViewer from "../components/Viewer/video-viewer.jsx";
+import ImageViewer from "../components/Viewer/image-viewer.jsx";
 
 export default function FileEditor() {
   const url = import.meta.env.VITE_API_URL;
@@ -13,12 +15,15 @@ export default function FileEditor() {
   const decodedFileName = decodeURIComponent(fileUtm);
   const user = useUserStore((s) => s.user);
 
-  const [fileContent, setFileContent] = useState("");
+
+  const [fileContent, setFileContent] = useState(null);
   const [mime, setMime] = useState("");
   const [files, setFiles] = useState([]);
   const [currentFileData, setCurrentFileData] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const editorRef = useRef(null);
+  const [render, setRender] = useState(null);
+
+
 
   // Fetch file 
   useEffect(() => {
@@ -45,27 +50,112 @@ export default function FileEditor() {
 
 
   useEffect(() => {
+    // Reset states when file changes
+    setFileContent(null);
+    setMime("");
+    setRender(null);
+    
+    if (!decoded) {
+      console.log("❌ No file ID (decoded) provided");
+      return;
+    }
+    
+    if (!url) {
+      console.log("❌ No API URL configured");
+      return;
+    }
+    
     const fetchFileContent = async () => {
+    
+      
       try {
-        const res = await axios.get(`${url}/api/files/${decoded}`, { withCredentials: true });
-        setFileContent(res.data.content);
-        setMime(res.data.type);
+        // cache-busting timestamp to prevent stale headers
+        const apiUrl = `${url}/api/files/${decoded}?t=${Date.now()}`;
+     
+        
+        const res = await axios.get(apiUrl, { 
+          withCredentials: true, 
+          responseType: 'arraybuffer',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+       // console.log("Response headers:", res.headers);
+        
+        const contentType = res.headers['content-type'];
+
+        setMime(contentType);
+        
+        const blob = new Blob([res.data], { type: contentType });
+   
+        
+        const blobUrl = URL.createObjectURL(blob);
+     
+  
+        setFileContent(blobUrl);
+        
+   
       } catch (err) {
-        console.error("Error fetching file content:", err);
+        
+        console.error("Error details:", err.response?.status, err.response?.data);
       }
     };
+    
     fetchFileContent();
-  }, [decoded]);
+    
+    // Cleanup blob URL on unmount 
+    return () => {
+      if (fileContent) {
+        URL.revokeObjectURL(fileContent);
+      }
+    };
+  }, [decoded, url]);
+
+  useEffect(() => {
+        const handleSwitchViewer = () => {
+ 
+            
+            if (!mime || !fileContent) {
+                setRender(
+                    <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                            <p className="text-gray-500 dark:text-gray-400">Loading file...</p>
+                        </div>
+                    </div>
+                );
+                return;
+            }
+            
+          if (mime === 'application/pdf') {
+           
+            setRender(<PDFViewer fileUrl={fileContent} />);
+            }
+            else if (mime.startsWith('video/')|| mime.startsWith('audio/')) {
+
+            setRender(<VideoViewer fileUrl={fileContent} fileName={decodedFileName} mimeType={mime} isAudio={mime.startsWith('audio/')} />);
+            }
+            else if (mime.startsWith('image/')) {
+
+            setRender(<ImageViewer fileUrl={fileContent} fileName={decodedFileName} />);
+            }
+            else {
+               
+                setRender(<div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                    Preview not available for this file type ({mime})
+                </div>);
+            }
+        };
+        
+        handleSwitchViewer();
+  }, [mime, fileContent, decodedFileName]);
 
 
-  function handleEditorDidMount(editor, monaco) {
-    editorRef.current = editor;
-  }
 
   
-  function handleEditorChange(value) {
-    setFileContent(value);
-  }
+  
 
 
   return (
@@ -81,7 +171,7 @@ export default function FileEditor() {
       <button
         onClick={() => setIsDrawerOpen(true)}
         className="lg:hidden fixed bottom-6 left-6 z-30 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-colors"
-        aria-label="Open files menu"
+ 
       >
         <Menu size={24} />
       </button>
@@ -134,16 +224,11 @@ export default function FileEditor() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
             <h1 className="text-xl sm:text-2xl font-bold text-black dark:text-white truncate">
-              Editing: {decodedFileName}
+              Viewing: {decodedFileName}
             </h1>
           </div>
           <div className="flex-1 overflow-auto">
-            <EditorTypes
-              mime={mime}
-              content={fileContent}
-              onChange={handleEditorChange}
-              onMount={handleEditorDidMount}
-            />
+            {render}
           </div>
         </div>
       </div>

@@ -5,8 +5,7 @@ import { FileText, FileChartPie, Clapperboard, FileChartLine, Folder,
   FileImage,
   FileCode } from "lucide-react";
 
-// 每个类型存 { component, defaultColor }
-const fileIcons = { docx: <FileText color="#22c55e" size={50} />, pptx: <FileChartPie color="#f7c81b" size={50} />, xlsx: <FileChartLine color="#21a366" size={50} />, mp4: <Clapperboard color="#f97316" size={50} />, folder: <Folder color="#2b8cee" size={50} /> };
+// const fileIcons = { docx: <FileText color="#22c55e" size={50} />, pptx: <FileChartPie color="#f7c81b" size={50} />, xlsx: <FileChartLine color="#21a366" size={50} />, mp4: <Clapperboard color="#f97316" size={50} />, folder: <Folder color="#2b8cee" size={50} /> };
 
 export const mimeIconMap = {
   
@@ -23,14 +22,20 @@ export const mimeIconMap = {
   "image/jpeg": { component: FileImage, color: "#a855f7" },
   "image/png": { component: FileImage, color: "#a855f7" },
   "image/gif": { component: FileImage, color: "#a855f7" },
+  "image/webp": { component: FileImage, color: "#a855f7" },
+  "image/svg+xml": { component: FileImage, color: "#a855f7" },
 
   
   "audio/mpeg": { component: FileAudio, color: "#f97316" },
   "audio/wav": { component: FileAudio, color: "#f97316" },
+  "audio/ogg": { component: FileAudio, color: "#f97316" },
+  "audio/flac": { component: FileAudio, color: "#f97316" },
+  "audio/aac": { component: FileAudio, color: "#f97316" },
+  "audio/webm": { component: FileAudio, color: "#f97316" },
 
- 
   "video/mp4": { component: FileVideo, color: "#10b981" },
   "video/webm": { component: FileVideo, color: "#10b981" },
+  "video/hevc": { component: FileVideo, color: "#10b981" },
 };
 
 

@@ -8,6 +8,8 @@ import Login from './pages/login.jsx';
 import PageControl from './components/page-control.jsx';
 import Converter from './pages/converter.jsx';
 import FileEditor from './pages/Editor.jsx';
+import FileViewer from './pages/Viewer.jsx';
+import { ToastProvider } from './components/toast.jsx';
 
 
 // Initialize theme on app load from localStorage
@@ -45,14 +47,17 @@ function AppWrapper() {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
+      <ToastProvider>
       <Routes>
         <Route path="/" element={<AppWrapper />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Login />} />
         <Route path="/dashboard" element={<PageControl />} />
         <Route path='/converter' element={<Converter />} />
-        <Route path='/view/editor/:filename' element={<FileEditor />} />
+        <Route path='/view/editor/:filename/:fileUtm' element={<FileEditor />} />
+        <Route path='/view/viewer/:filename/:fileUtm' element={<FileViewer />} />
       </Routes>
+      </ToastProvider>
     </BrowserRouter>
     
   </StrictMode>,

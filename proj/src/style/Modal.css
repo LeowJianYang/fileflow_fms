@@ -78,12 +78,20 @@
     justify-content: center;
     align-self: center;
     border: 1px solid var(--border-primary, #e0e0e0);
-    width: 30rem;
+    width: 90vw;
+    max-width: 30rem;
     height: auto;
     border-radius: 10px;
     margin: 1rem;
-    padding: 1rem;
+    padding: 0.75rem;
     transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+@media (min-width: 640px) {
+    .ModalForm {
+        padding: 1rem;
+        width: 30rem;
+    }
 }
 
 

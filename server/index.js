@@ -21,7 +21,8 @@ app.use(cors(
         origin:allowedOrigin,
         credentials:true,
         methods:["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        allowedHeaders:["Content-Type", "Authorization", "Cookie"],
+        allowedHeaders:["Content-Type", "Authorization", "Cookie", "Cache-Control", "Pragma"],
+        exposedHeaders:["Content-Type", "Content-Length", "Cache-Control", "Pragma", "Expires"],
     }
   ));
   // app.get("*", (_req,res)=>{
