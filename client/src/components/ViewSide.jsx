@@ -101,6 +101,11 @@ export function ViewNavBar({currentFile, FileId, newContent, fileMetadata}) {
                 >
                     Save
                 </button>
+                { fileMetadata && fileMetadata.filetype == 'text/markdown' &&
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 rounded-xl sm:rounded-xl text-center font-bold text-base sm:text-xl transition-colors
+                    " onClick={()=>{ navigate(`/view/viewer/${encodeURIComponent(fileMetadata.FileId)}/${encodeURIComponent(fileMetadata.filename)}`)}}>
+                        View Markdown
+                    </button>}
                 <div className="hidden sm:block w-px h-6 bg-gray-400 dark:bg-gray-600"></div>
                 <Info 
                     className="cursor-pointer text-black dark:text-white hover:text-blue-500 transition-colors duration-150 ease-in-out shrink-0" 

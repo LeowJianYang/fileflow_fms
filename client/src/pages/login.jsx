@@ -196,7 +196,8 @@ export default function Login() {
       }
 
       await axios.post(`${url}/api/auth/register`, {Newusername:username, Newemail: email, Newpassword:password}, {withCredentials:true}).then((res)=>{
-
+        
+        toast.success("Account created successfully ! You can login now.",{position:"top-center"})
         console.log('Sign Up Success:', res.data);
       }).catch((error)=>{
          console.error('Error during sign up:', error);
@@ -208,6 +209,7 @@ export default function Login() {
         toast.success("Logged in successfully !",{position:"top-center"})
         
       } catch (error) {
+        toast.error("Login failed. Please check your credentials.",{position:"top-center"})
         console.error('Error during login:', error);
       }
     }

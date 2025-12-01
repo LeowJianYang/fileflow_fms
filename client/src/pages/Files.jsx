@@ -1,13 +1,13 @@
 import { Grid, LayoutList, FolderUp, Upload, Plus, FileX2Icon, File } from "lucide-react"
 
-import { GetIconByFileType } from "../utils/file-icon";
+import { GetIconByFileType } from "../utils/file-icon.jsx";
 import { useEffect, useState } from "react";
-import { useUserStore } from "../stores/userstore";
+import { useUserStore } from "../stores/userstore.js";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import localdate from "../utils/dateModi.js";
-import FileProcess from "../components/fileProcess";
-import SearchBar from "../components/SearchBar";
+import FileProcess from "../components/fileProcess.jsx";
+import SearchBar from "../components/SearchBar.jsx";
 import {ContextMenu} from "radix-ui";
 import useHandleFileEdit from "../utils/edit-view-routes.jsx";
 

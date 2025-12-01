@@ -3,7 +3,7 @@ import { createRoot} from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './index.css'
 import App from './App.jsx'
-import { useThemeManager } from './stores/ThemeManager'
+import { useThemeManager } from './stores/ThemeManager.js'
 import Login from './pages/login.jsx';
 import PageControl from './components/page-control.jsx';
 import Converter from './pages/converter.jsx';

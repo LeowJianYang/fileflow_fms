@@ -91,6 +91,23 @@ router.post('/register', async (req, res) => {
 });
 
 
+// logout route
+router.post('/logout', async (_req, res)=>{
+
+    try{
+    res.clearCookie('file_token', {
+        httpOnly:true,
+        secure:true,
+        sameSite:'none'
+    })
+    return res.status(200).json({ message: 'Logout successful'});
+
+    }catch(err){
+        return res.status(500).json({ message: 'Server error', error: err });
+    }
+});
+
+
 
 
 

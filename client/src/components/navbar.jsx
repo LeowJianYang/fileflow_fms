@@ -5,6 +5,7 @@ import { useUserStore } from '../stores/userstore';
 //import { shallow } from 'zustand/shallow';
 import { useThemeManager } from '../stores/ThemeManager';
 import { useState } from 'react';
+import { useAppToast } from '../utils/use-toast';
 
 
 export default function Navbar() {
@@ -15,6 +16,7 @@ export default function Navbar() {
   const user = useUserStore((s) => s.user);
   const loading = useUserStore((s) => s.loading);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const toast = useAppToast();
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -22,6 +24,16 @@ export default function Navbar() {
     navigate(path, { replace: true });
     closeMenu();
   };
+
+  const logout = async () =>{
+      try{
+        await handleLogout();
+        toast.success("Logged out successfully !",{position:"top-center"})
+      } catch(err){
+        toast.error("Error during logout !",{position:"top-center"})
+      }
+       
+  }
 
   return (
     <>
@@ -36,7 +48,7 @@ export default function Navbar() {
           
         {/* Desktop Navigation */}
         <nav className='hidden lg:flex justify-center items-center text-gray-900 dark:text-white flex-row gap-3.5'>
-          <button className='px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/filemanager', { replace: true })}>File Manager</button>
+          <button className='px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/dashboard', { replace: true })}>File Manager</button>
           <button className='px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/profile', { replace: true })}>Profile</button>
           <button className='px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/conversion', { replace: true })}>Conversion</button>
         </nav>
@@ -123,8 +135,8 @@ export default function Navbar() {
                       <p className='text-gray-900 dark:text-white mb-3 px-2 font-medium'>User: {user.Username ?? 'Guest'}</p>
                       <button 
                         className='w-full px-4 py-3 rounded bg-red-500 hover:bg-red-600 text-white font-medium'
-                        onClick={() => {
-                          handleLogout();
+                        onClick={async () => {
+                          await logout();
                           closeMenu();
                         }}
                       >

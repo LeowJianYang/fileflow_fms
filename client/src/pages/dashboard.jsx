@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
-import { useUserStore } from "../stores/userstore"
+import { useUserStore } from "../stores/userstore.js"
 import {  File,CirclePlus, FileUp, X, BarChart3, FileX2Icon,ArrowRight } from "lucide-react";
 import axios from "axios";
-import { mimeIconMap,GetIconByFileType } from "../utils/file-icon";
-import FileProcess from "../components/fileProcess";
-import SearchBar from "../components/SearchBar";
+import { mimeIconMap,GetIconByFileType } from "../utils/file-icon.jsx";
+import FileProcess from "../components/fileProcess.jsx";
+import SearchBar from "../components/SearchBar.jsx";
 import useHandleFileEdit from "../utils/edit-view-routes.jsx";
 
 export default function Dashboard() {

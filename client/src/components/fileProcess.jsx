@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ModalForm, ModalButton } from "./modal";
+import { ModalForm, ModalButton } from "./modal.jsx";
 import Select from 'react-select';
 import { fileOptions, mimeIconTypesMap } from "../utils/FileSelection.js";
 import { GetIconByFileType } from "../utils/file-icon.jsx";
@@ -16,7 +16,7 @@ import axios from "axios";
  * @param {Object} props
  * @param {Object} props.user - User object with UserId
  * @param {Function} props.onFileChange - Callback when files change (upload/create)
- * @param {Object} props.selectedFile - Currently selected file for details view
+ * @param {Array} props.selectedFile - Currently selected file for details view
  * @param {Function} props.onFileEdit - Callback when edit button is clicked
  * @param {boolean} props.uploadModalOpen - Control upload modal visibility
  * @param {Function} props.setUploadModalOpen - Set upload modal state
@@ -41,6 +41,7 @@ export default function FileProcess({
     deleteModalOpen,
     setDeleteModalOpen
 }) {
+
     const url = import.meta.env.VITE_API_URL;
 
     // Upload file states

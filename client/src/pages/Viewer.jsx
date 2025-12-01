@@ -1,12 +1,13 @@
 import { useParams } from "react-router-dom";
-import ViewSide, { ViewNavBar } from "../components/ViewSide";
+import ViewSide, { ViewNavBar } from "../components/ViewSide.jsx";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useUserStore } from "../stores/userstore";
+import { useUserStore } from "../stores/userstore.js";
 import { Menu, X } from "lucide-react";
 import PDFViewer from "../components/Viewer/pdf-viewer.jsx";
 import VideoViewer from "../components/Viewer/video-viewer.jsx";
 import ImageViewer from "../components/Viewer/image-viewer.jsx";
+import MarkdownViewer from "../components/Viewer/markdown-viewer.jsx";
 
 export default function FileEditor() {
   const url = import.meta.env.VITE_API_URL;
@@ -15,7 +16,7 @@ export default function FileEditor() {
   const decodedFileName = decodeURIComponent(fileUtm);
   const user = useUserStore((s) => s.user);
 
-
+  const blobUrlRef = useRef(null); // Track blob URL with ref
   const [fileContent, setFileContent] = useState(null);
   const [mime, setMime] = useState("");
   const [files, setFiles] = useState([]);
@@ -50,71 +51,126 @@ export default function FileEditor() {
 
 
   useEffect(() => {
+    // Cleanup previous blob URL when switching files
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+    
     // Reset states when file changes
     setFileContent(null);
     setMime("");
     setRender(null);
     
     if (!decoded) {
-      console.log("❌ No file ID (decoded) provided");
+      console.log("No file ID (decoded) provided");
       return;
     }
     
     if (!url) {
-      console.log("❌ No API URL configured");
+      console.log("No API URL configured");
       return;
     }
     
     const fetchFileContent = async () => {
-    
+      
       
       try {
-        // cache-busting timestamp to prevent stale headers
+        // Cache-busting timestamp to prevent stale headers
         const apiUrl = `${url}/api/files/${decoded}?t=${Date.now()}`;
-     
+       
         
-        const res = await axios.get(apiUrl, { 
-          withCredentials: true, 
-          responseType: 'arraybuffer',
+        // make a request to check content type
+        const headRes = await axios.head(apiUrl, { 
+          withCredentials: true,
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
           }
         });
         
-       // console.log("Response headers:", res.headers);
-        
-        const contentType = res.headers['content-type'];
-
+        const contentType = headRes.headers['content-type'];
+      
         setMime(contentType);
         
-        const blob = new Blob([res.data], { type: contentType });
-   
-        
-        const blobUrl = URL.createObjectURL(blob);
-     
-  
-        setFileContent(blobUrl);
+        // For text-based files (markdown, plain text, code), fetch as JSON/text
+        // Backend sends markdown as application/json with {type, content}
+        if (contentType?.startsWith('text/') || 
+            contentType?.startsWith('application/json') ||
+            contentType === 'application/javascript') {
+          
+          const res = await axios.get(apiUrl, { 
+            withCredentials: true,
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          
+          console.log("Response data type:", typeof res.data);
+          console.log("Response data:", res.data);
+          
+          // Backend sends {type, content} for text files
+          if (res.data && typeof res.data === 'object' && res.data.content) {
+            
+
+            // Update MIME type from the JSON response (actual file type)
+            if (res.data.type) {
+              setMime(res.data.type);
+            }
+            
+            setFileContent(res.data.content); // Store raw text content (not a blob URL)
+          } else if (typeof res.data === 'string') {
+            setFileContent(res.data);
+          } else {
+            console.warn("Unexpected text response format:", res.data);
+          }
+        } 
+        // For binary files (PDF, video, audio, images), fetch as arraybuffer
+        else {
+
+          const res = await axios.get(apiUrl, { 
+            withCredentials: true, 
+            responseType: 'arraybuffer',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          
+          
+          const blob = new Blob([res.data], { type: contentType });
+          const blobUrl = URL.createObjectURL(blob);
+
+          // Save blob URL to ref for later cleanup
+          blobUrlRef.current = blobUrl;
+          setFileContent(blobUrl);
+        }
         
    
       } catch (err) {
-        
+        console.error("Error fetching file:", err);
         console.error("Error details:", err.response?.status, err.response?.data);
       }
     };
     
     fetchFileContent();
     
-    // Cleanup blob URL on unmount 
+    // Cleanup on unmount only
     return () => {
-      if (fileContent) {
-        URL.revokeObjectURL(fileContent);
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
       }
     };
   }, [decoded, url]);
 
+
+
+
+
   useEffect(() => {
-        const handleSwitchViewer = () => {
+        const handleSwitchViewer = async () => {
  
             
             if (!mime || !fileContent) {
@@ -138,8 +194,11 @@ export default function FileEditor() {
             setRender(<VideoViewer fileUrl={fileContent} fileName={decodedFileName} mimeType={mime} isAudio={mime.startsWith('audio/')} />);
             }
             else if (mime.startsWith('image/')) {
-
             setRender(<ImageViewer fileUrl={fileContent} fileName={decodedFileName} />);
+            } else if (mime === 'text/markdown' || decodedFileName.endsWith('.md') || decodedFileName.endsWith('.markdown')) {
+              
+              // fileContent is now the raw text string, not a blob URL
+              setRender(<MarkdownViewer content={fileContent} />);
             }
             else {
                
