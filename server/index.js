@@ -4,7 +4,6 @@ import './utils/loadenv.js';
 import express from 'express';
 import parser from 'cookie-parser';
 import cors from 'cors';
-import http from 'http';
 import authRouter from './src/routes/auth.js';
 import fileRoute from './src/routes/files.js';
 import CookieMiddleware from './src/middleware/cookie-auth.js';

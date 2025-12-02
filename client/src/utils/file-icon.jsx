@@ -1,4 +1,4 @@
-import { FileText, FileChartPie, Clapperboard, FileChartLine, Folder,
+import { FileText, FileChartPie, FileChartLine, Folder,
   File,
   FileAudio,
   FileVideo,
@@ -36,6 +36,9 @@ export const mimeIconMap = {
   "video/mp4": { component: FileVideo, color: "#10b981" },
   "video/webm": { component: FileVideo, color: "#10b981" },
   "video/hevc": { component: FileVideo, color: "#10b981" },
+
+  "directory": { component: Folder, color: "#2b8cee" },
+  "folder": { component: Folder, color: "#2b8cee" },
 };
 
 

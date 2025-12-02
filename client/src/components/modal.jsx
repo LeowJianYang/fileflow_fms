@@ -46,7 +46,7 @@ export const ModalButton = ({type= "primary",onClick, children, disabled=false})
  * @param {string} param.fileId - File ID for title update
  * @returns Modal Component
  */
-export const ModalForm = ({title,onOk,onCancel,children,footer, open,multi, titleEdit=false, fileId})=>{
+export const ModalForm = ({title,onOk,onCancel,children,footer, open,multi, titleEdit=false, fileId, dirId})=>{
     const [visible, setVisible] = useState(false);
     const [page, setPage] = useState(0);
     const [titleEditable, setTitleEditable] = useState(false);
@@ -68,7 +68,7 @@ export const ModalForm = ({title,onOk,onCancel,children,footer, open,multi, titl
     }, [title]);
 
     const handleUpdateTitle = async() => {
-        await axios.post(`${import.meta.env.VITE_API_URL}/api/files/up`, {Newtitle: titleState, fileId:fileId}, {withCredentials:true})
+        await axios.post(`${import.meta.env.VITE_API_URL}/api/files/up`, {Newtitle: titleState, fileId:fileId, dirId:dirId}, {withCredentials:true})
         .then((res) => {
             console.log("Title updated successfully:", res.data);
         })

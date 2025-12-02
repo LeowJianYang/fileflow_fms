@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import ViewSide, { ViewNavBar } from "../components/ViewSide.jsx";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
@@ -8,6 +8,7 @@ import PDFViewer from "../components/Viewer/pdf-viewer.jsx";
 import VideoViewer from "../components/Viewer/video-viewer.jsx";
 import ImageViewer from "../components/Viewer/image-viewer.jsx";
 import MarkdownViewer from "../components/Viewer/markdown-viewer.jsx";
+import { useAppToast } from "../utils/use-toast.jsx";
 
 export default function FileEditor() {
   const url = import.meta.env.VITE_API_URL;
@@ -15,6 +16,7 @@ export default function FileEditor() {
   const decoded = decodeURIComponent(filename);
   const decodedFileName = decodeURIComponent(fileUtm);
   const user = useUserStore((s) => s.user);
+  const hydrated = useUserStore((s) => s.hydrated);
 
   const blobUrlRef = useRef(null); // Track blob URL with ref
   const [fileContent, setFileContent] = useState(null);
@@ -23,7 +25,20 @@ export default function FileEditor() {
   const [currentFileData, setCurrentFileData] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [render, setRender] = useState(null);
+  const navigate = useNavigate();
+  const  toast  = useAppToast();
+  
+    useEffect(() => {
+         
+        const checkUser = async () =>{
+            if (hydrated && !user) {
+                navigate("/login", {replace: true});
+            }
+        }
 
+        checkUser();    
+
+    }, [user, hydrated, navigate]);
 
 
   // Fetch file 

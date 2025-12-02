@@ -1,10 +1,12 @@
-import { useParams } from "react-router-dom";
+import { useParams,useNavigate } from "react-router-dom";
 import ViewSide, { ViewNavBar } from "../components/ViewSide";
 import EditorTypes from "../components/EditorSetup";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useUserStore } from "../stores/userstore";
 import { Menu, X } from "lucide-react";
+import { useAppToast } from "../utils/use-toast.jsx";
+
 
 export default function FileEditor() {
   const url = import.meta.env.VITE_API_URL;
@@ -12,6 +14,7 @@ export default function FileEditor() {
   const decoded = decodeURIComponent(filename);
   const decodedFileName = decodeURIComponent(fileUtm);
   const user = useUserStore((s) => s.user);
+  const hydrated = useUserStore((s) => s.hydrated);
 
   const [fileContent, setFileContent] = useState("");
   const [mime, setMime] = useState("");
@@ -19,6 +22,22 @@ export default function FileEditor() {
   const [currentFileData, setCurrentFileData] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const editorRef = useRef(null);
+
+  //Check user
+  const navigate = useNavigate();
+  const  toast  = useAppToast();
+     useEffect(() => {
+         
+        const checkUser = async () =>{
+            if (hydrated && !user) {
+                navigate("/login", {replace: true});
+            }
+        }
+
+        checkUser();    
+
+    }, [user, hydrated, navigate]);
+
 
   // Fetch file 
   useEffect(() => {

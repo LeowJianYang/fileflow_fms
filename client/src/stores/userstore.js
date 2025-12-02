@@ -1,28 +1,32 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import axios from 'axios'
+import axios from '../config/axios.js'
 
-const url = import.meta.env.VITE_API_URL;
+const url = import.meta.env.VITE_API_URL
 
 export const useUserStore = create(
   persist(
     (set) => ({
+
       user: null,
       loading: false,
+      hydrated: false, 
 
-      // set user data
+     
       setUser: (user) => set({ user }),
 
-      // login
-      login: async (email, password) => {
+     
+      login: async (email, password, remember = false) => {
         set({ loading: true })
+
         try {
           const res = await axios.post(
             `${url}/api/auth/login`,
-            { email, password },
-            { withCredentials: true } 
+            { email, password, remember },
+            { withCredentials: true }
           )
 
+          
           set({ user: res.data.user, loading: false })
 
           return res.data
@@ -32,9 +36,9 @@ export const useUserStore = create(
         }
       },
 
-      // logout
       logout: async () => {
         set({ loading: true })
+
         try {
           await axios.post(`${url}/api/auth/logout`, {}, { withCredentials: true })
 
@@ -45,24 +49,28 @@ export const useUserStore = create(
         }
       },
 
-      // Init user
+  
       fetchUser: async () => {
-        set({ loading: true })
         try {
-          const res = await axios.get(`${url}/api/user`, {
-            withCredentials: true
-          })
+          const res = await axios.get(`${url}/api/auth/user`, { withCredentials: true })
 
-          set({ user: res.data.user || null, loading: false })
+       
+          set({ user: res.data.user || null })
         } catch (err) {
-          set({ user: null, loading: false })
+          set({ user: null })
+        } finally {
+          set({ hydrated: true }) 
         }
       }
     }),
 
     {
-      name: 'user-store' // localStorage key
-      // partialize: (state) => ({ user: state.user }) 
+      name: 'user-store',
+
+    
+      partialize: (state) => ({
+        hydrated: state.hydrated
+      })
     }
   )
 )

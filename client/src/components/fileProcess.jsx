@@ -3,9 +3,10 @@ import { ModalForm, ModalButton } from "./modal.jsx";
 import Select from 'react-select';
 import { fileOptions, mimeIconTypesMap } from "../utils/FileSelection.js";
 import { GetIconByFileType } from "../utils/file-icon.jsx";
-import { FileIcon, Upload, X, FilePlus2 } from "lucide-react";
+import { FileIcon, Upload, X, FilePlus2, FolderPlus } from "lucide-react";
 import localdate from "../utils/dateModi.js";
 import axios from "axios";
+import { useAppToast } from "../utils/use-toast.jsx";
 
 /**
  * 
@@ -39,7 +40,11 @@ export default function FileProcess({
     detailsModalOpen,
     setDetailsModalOpen,
     deleteModalOpen,
-    setDeleteModalOpen
+    setDeleteModalOpen,
+    setCreateFolderOpen,
+    createFolderOpen,
+    currentDirId = null,
+    isFolder = false, 
 }) {
 
     const url = import.meta.env.VITE_API_URL;
@@ -54,6 +59,8 @@ export default function FileProcess({
     const [newFileName, setNewFileName] = useState("");
     const [typeSelection, setTypeSelection] = useState(fileOptions[0]?.value || "txt");
 
+    const [newFolderName, setNewFolderName] = useState("");
+    const toast = useAppToast();
   
     const truncateFileName = (fileName, maxLength = 25) => {
         if (fileName.length <= maxLength) return fileName;
@@ -69,7 +76,7 @@ export default function FileProcess({
 
     const handleCreateNewFile = async (fileType, fileName) => {
         if (!fileName || !fileName.trim()) {
-            alert("Please enter a file name!");
+            toast.warning("Please enter a file name!");
             return;
         }
        
@@ -84,6 +91,11 @@ export default function FileProcess({
         const formData = new FormData();
         formData.append("file", virtualFile);
         formData.append("user_id", `${user?.UserId}`);
+        
+        if (currentDirId !== null) {
+            formData.append("is_directory", "true");
+            formData.append("dirId", currentDirId);
+        }
 
         try {
             const res = await axios.post(`${url}/api/files/upload`, formData, {
@@ -102,12 +114,12 @@ export default function FileProcess({
             setNewFileName("");
             setTypeSelection(fileOptions[0]?.value || "txt");
             setAddModalOpen(false);
-            alert("File created successfully!");
-            
+            toast.success("File created successfully!");
+
             return res.data;
         } catch (err) {
             console.error("Error creating file", err);
-            alert("Error creating file. Please try again.");
+            toast.error("Error creating file. Please try again.");
         }
     };
 
@@ -144,13 +156,18 @@ export default function FileProcess({
 
     const handleUpload = async () => {
         if (!fileToUpload) {
-            alert("Please select a file first!");
+            toast.warning("Please select a file first!");
             return;
         }
 
         const form = new FormData();
-        form.append("file", fileToUpload);
+        form.append("file", fileToUpload);  
         form.append("user_id", `${user?.UserId}`);
+        
+        if (currentDirId !== null) {
+            form.append("is_directory", "true");
+            form.append("dirId", currentDirId);
+        }
 
         setIsUploading(true);
         setUploadProgress(0);
@@ -175,32 +192,65 @@ export default function FileProcess({
             setUploadProgress(0);
             setIsUploading(false);
             setUploadModalOpen(false);
-            alert("File uploaded successfully!");
+            toast.success("File uploaded successfully!");
         } catch (error) {
             console.error("Error uploading file:", error);
             setIsUploading(false);
-            alert("Error uploading file. Please try again.");
+            toast.error("Error uploading file. Please try again.");
         }
     };
 
     const handleFileDelete = async (file) =>{
         if (!file) {
-            alert("No file selected for deletion!");
+            toast.warning("No file selected for deletion!");
             return;
         };
 
         try {
-            await axios.delete(`${url}/api/files/${file.FileId}`,{data: {userId: user?.UserId},withCredentials:true});
+            // Use dirId for folders, FileId for files
+            const itemId = isFolder ? file.dirId : file.FileId;
+            const itemName = isFolder ? "Folder" : "File";
+            
+            await axios.delete(`${url}/api/files/${itemId}`,{
+                data: {userId: user?.UserId, isFolder: isFolder},
+                withCredentials:true
+            });
+            
             if (onFileChange) {
                 onFileChange();
             }
             setDeleteModalOpen(false);
-            alert("File deleted successfully!");
+            toast.success(`${itemName} deleted successfully!`);
         } catch (error) {
-            console.error("Error deleting file:", error);
+            console.error("Error deleting:", error);
             setDeleteModalOpen(false);
-            alert("Error deleting file. Please try again.");
+            toast.error("Error deleting. Please try again.");
         }
+    }
+
+
+    const handleCreateNewFolder = async () => {
+        if (!newFolderName || !newFolderName.trim()) {
+            toast.warning("Please enter a folder name!");
+            return;
+        };
+
+        try {
+            const res = await axios.post(`${url}/api/files/dir`, {userId: user?.UserId, dirName: newFolderName, dirSub: currentDirId}, {withCredentials: true});
+            const data = res.data;
+            if (onFileChange) {
+                onFileChange();
+            };
+            setNewFolderName("");
+            setCreateFolderOpen(false);
+            toast.success(`${data.message}`);
+            
+        } catch (error) {
+            console.error("Error creating folder:", error);
+            setNewFolderName("");
+            setCreateFolderOpen(false);
+            toast.error(`${error.response?.data?.message || 'Error creating folder. Please try again.'}`);
+        };
     }
 
     
@@ -215,6 +265,7 @@ export default function FileProcess({
                 onOk={() => setDetailsModalOpen(false)}
                 titleEdit={true}
                 fileId={selectedFile?.FileId ?? null}
+                dirId ={currentDirId}
                 footer={
                 <div className="flex flex-row gap-2 justify-center">
                   <ModalButton onClick={() => setDetailsModalOpen(false)} type="danger"> Close </ModalButton>
@@ -229,7 +280,7 @@ export default function FileProcess({
                     <p>{<GetIconByFileType filetype={selectedFile?.filetype} size={40} className="sm:w-12 sm:h-12 text-[#22c55e]"/> || <FileIcon color="#9ca3af" size={40} className="sm:w-12 sm:h-12"/>}</p>
 
                     <p className="font-semibold text-sm dark:text-white text-black">Details</p>
-                    <p className="text-sm dark:text-gray-300 text-gray-600 ">{selectedFile?.filename.split('.').pop().toUpperCase()}</p>
+                    <p className="text-sm dark:text-gray-300 text-gray-600 ">{currentDirId ? selectedFile?.filename.split('.').pop().toUpperCase() : ''}</p>
                     <p className="text-sm dark:text-gray-300 text-gray-600 ">{(selectedFile?.filesize / 1024).toFixed(2)} KB</p>
                     <p className="text-sm dark:text-gray-300 text-gray-600 ">Modified: {localdate(selectedFile?.lastModified)}</p>
                 </div>
@@ -430,6 +481,30 @@ export default function FileProcess({
                     <p className="font-semibold text-sm dark:text-white text-black">Are you sure you want to delete this file?</p>
                     <p className="text-xl dark:text-white text-black font-extrabold">{selectedFile?.filename}</p>
                 </div>
+            </ModalForm>
+
+
+            <ModalForm
+                title="Create New Folder"
+                open={createFolderOpen}
+                onCancel={() => {
+                    setCreateFolderOpen(false);
+                }}
+                onOk={() => setCreateFolderOpen(false)}
+                footer={
+                <div className="flex flex-row gap-2 justify-center">
+                  <ModalButton onClick={() => setCreateFolderOpen(false)} type="danger"> Close </ModalButton>
+                  <ModalButton type="primary" onClick={() => { handleCreateNewFolder(), setCreateFolderOpen(false); }}> Create</ModalButton>
+                </div>}
+            >
+                <div className="mt-2 p-4 flex flex-col gap-4 justify-center items-center align-middle">
+                    <p className="font-semibold text-sm dark:text-white text-black">Enter Folder Details</p>
+                    <FolderPlus color="#159f5e" size={40} className="w-10 h-10 sm:w-12 sm:h-12"/>
+                    <input type="text" placeholder="Folder Name" className="border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-2.5 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:text-white text-black text-sm sm:text-base" 
+                     onChange={(e) => setNewFolderName(e.target.value)}
+                    />
+                </div>
+
             </ModalForm>
         </>
     )

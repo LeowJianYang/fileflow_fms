@@ -43,12 +43,16 @@ export default function Landing() {
 
     return (
 
-        <div className="w-full h-full bg-white dark:bg-[#111621] px-4 sm:px-6 lg:px-8">
+        <div className="w-full h-full bg-white dark:bg-[#111621] px-4 sm:px-6 lg:px-8
+           bg-[linear-gradient(#d1d5db40_1px,transparent_1px),linear-gradient(90deg,#d1d5db40_1px,transparent_1px)]
+            dark:bg-[linear-gradient(#a1a1aa40_1px,transparent_1px),linear-gradient(90deg,#a1a1aa40_1px,transparent_1px)]
+            bg-[size:40px_40px]
+            ">
             {/**HERO SECTION */}
 
             <div className="flex flex-col justify-center items-center py-8 sm:py-12 lg:py-16 gap-4 sm:gap-6">
-                <p className="mt-4 sm:mt-6 rounded-full bg-[#FAC638] px-4 py-1.5 text-center text-xs sm:text-sm md:text-[15px] items-center align-middle font-semibold whitespace-nowrap">Now In Public Beta !</p>
-                <h1 className="   text-3xl sm:text-4xl md:text-5xl lg:text-6xl
+                {/* <p className="mt-4 sm:mt-6 rounded-full bg-[#FAC638] px-4 py-1.5 text-center text-xs sm:text-sm md:text-[15px] items-center align-middle font-semibold whitespace-nowrap">Now In Public Beta !</p> */}
+                <h1 className="   mt-10 text-3xl sm:text-4xl md:text-5xl lg:text-6xl
                                  font-bold text-center leading-tight px-4
                                 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500
                                 bg-300% animate-color-wave

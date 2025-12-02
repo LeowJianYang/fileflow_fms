@@ -4,7 +4,7 @@ import { Sun,Moon,Database, Menu, X, User } from 'lucide-react';
 import { useUserStore } from '../stores/userstore';
 //import { shallow } from 'zustand/shallow';
 import { useThemeManager } from '../stores/ThemeManager';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppToast } from '../utils/use-toast';
 
 
@@ -16,7 +16,22 @@ export default function Navbar() {
   const user = useUserStore((s) => s.user);
   const loading = useUserStore((s) => s.loading);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const toast = useAppToast();
+
+  // Detect scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -37,11 +52,20 @@ export default function Navbar() {
 
   return (
     <>
-      <div className='w-full h-15 flex flex-row justify-between items-center bg-white dark:bg-gray-900 p-4 border-b-2 border-gray-200 dark:border-gray-700'>
+      <div className={`
+        fixed z-50
+        w-full h-15 flex flex-row justify-between items-center 
+        p-4 
+        transition-all duration-300 ease-in-out
+        ${isScrolled 
+          ? 'glass shadow-sm py3'
+          : 'bg-transparent py-5'
+        }
+      `}>
 
        
         <div className='flex flex-row justify-between items-center'>
-          <h3 className='items-center text-gray-900 dark:text-white font-bold text-base sm:text-lg'>
+          <h3 className='items-center text-gray-900 dark:text-white font-bold text-base sm:text-lg cursor-pointer' onClick={() => navigate('/')}>
             FileFlow
           </h3>
         </div>
@@ -218,18 +242,65 @@ export function ConverterBar () {
 export function Footer() {
 
   return (
-    <footer className='w-full h-auto flex items-center justify-between bg-white dark:bg-[#111621]'>
-      <p className='text-gray-900 dark:text-gray-500 p-4'>© {new Date().getFullYear()} FMS. All rights reserved.</p>
+    <footer className='w-full mt-auto border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111621]'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8'>
+        {/*  Footer  */}
+        <div className='flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6'>
+          
+          {/* Copyright */}
+          <div className='flex flex-col sm:flex-row items-center gap-2 sm:gap-4'>
+            <div className='flex items-center gap-2'>
+              <span className='text-lg sm:text-xl font-bold text-gray-900 dark:text-white'>FileFlow</span>
+              <span className='hidden sm:inline text-gray-400 dark:text-gray-600'>|</span>
+            </div>
+            <p className='text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left'>
+              © {new Date().getFullYear()} FMS. All rights reserved.
+            </p>
+          </div>
 
-      <div className='flex flex-row gap-4 p-4 items-center justify-end'>
-        <a href="/privacy" className="text-gray-600 dark:text-gray-400
-               hover:text-gray-900 dark:hover:text-white
-               hover:underline
-               transition-colors duration-300 ease-in-out">Privacy Policy</a>
-        <a href="/terms" className="text-gray-600 dark:text-gray-400
-               hover:text-gray-900 dark:hover:text-white
-               hover:underline
-               transition-colors duration-300 ease-in-out">Terms of Service</a>
+          {/*  Links */}
+          <div className='flex flex-wrap items-center justify-center gap-3 sm:gap-6'>
+            <a 
+              href="/privacy" 
+              className="text-xs sm:text-sm text-gray-600 dark:text-gray-400
+                       hover:text-blue-600 dark:hover:text-blue-400
+                       hover:underline underline-offset-4
+                       transition-all duration-200 ease-in-out
+                       active:scale-95 transform"
+            >
+              Privacy Policy
+            </a>
+            <span className='text-gray-300 dark:text-gray-700'>•</span>
+            <a 
+              href="/terms" 
+              className="text-xs sm:text-sm text-gray-600 dark:text-gray-400
+                       hover:text-blue-600 dark:hover:text-blue-400
+                       hover:underline underline-offset-4
+                       transition-all duration-200 ease-in-out
+                       active:scale-95 transform"
+            >
+              Terms of Service
+            </a>
+            <span className='text-gray-300 dark:text-gray-700'>•</span>
+            <a 
+              href="http://github.com/LeowJianYang/fileflow_fms" 
+              className="text-xs sm:text-sm text-gray-600 dark:text-gray-400
+                       hover:text-blue-600 dark:hover:text-blue-400
+                       hover:underline underline-offset-4
+                       transition-all duration-200 ease-in-out
+                       active:scale-95 transform"
+            >
+              Github
+            </a>
+          </div>
+        </div>
+
+        {/*  Additional Info */}
+        <div className='mt-4 pt-4 border-t border-gray-100 dark:border-gray-800'>
+          <p className='text-xs text-center text-gray-500 dark:text-gray-500'>
+            Made with ❤️ by leowjy | NICE
+          </p>
+        </div>
       </div>
     </footer>
   )

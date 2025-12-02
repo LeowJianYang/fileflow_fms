@@ -6,12 +6,15 @@ import { useUserStore } from '../stores/userstore';
 import axios from 'axios';
 import {useAppToast} from '../utils/use-toast'
 
+
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useThemeManager((s) => s.theme);
   const login = useUserStore((s)=>s.login);
+  const loading = useUserStore((s)=>s.loading);
   const url = import.meta.env.VITE_API_URL;
+  
   
   const isSignUp = location.pathname === '/signup';
   const [email, setEmail] = useState('');
@@ -20,7 +23,8 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  const user = useUserStore((s) => s.user);
+  const hydrated = useUserStore((s) => s.hydrated);
   
   // Validation states
   const [emailError, setEmailError] = useState('');
@@ -31,6 +35,18 @@ export default function Login() {
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
 
   const toast = useAppToast();
+  
+    useEffect(() => {
+         
+        const checkUser = async () =>{
+            if (hydrated && user) {
+                navigate("/dashboard", {replace: true});
+            }
+        }
+
+        checkUser();    
+
+    }, [user, hydrated, navigate]);
 
   // Email validation function
   const validateEmail = (email) => {
@@ -206,8 +222,10 @@ export default function Login() {
     } else {
       try{
         await login(email,password);
-        toast.success("Logged in successfully !",{position:"top-center"})
         
+        
+        toast.success("Logged in successfully !",{position:"top-center"})
+        navigate('/dashboard', { replace: true });
       } catch (error) {
         toast.error("Login failed. Please check your credentials.",{position:"top-center"})
         console.error('Error during login:', error);
@@ -218,6 +236,15 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
+
+        {/*Loading Overlay */}
+        {loading && (
+          <div className="fixed inset-0 flex flex-col items-center justify-center bg-[rgba(0,0,0,0.5)] bg-opacity-50 z-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <div className="font-semibold text-white mt-4">Processing...</div>
+          </div>
+        )}
+
         {/* Logo and Title */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-blue-500 dark:bg-blue-600 rounded-2xl mb-3 sm:mb-4 shadow-lg">
@@ -429,7 +456,7 @@ export default function Login() {
                   </button>
                 </div>
                 
-                {/* Error/Success Message with smooth animation */}
+                {/* Error/Success Message  */}
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     confirmPasswordError && confirmPasswordTouched ? 'max-h-20 opacity-100 mt-2' : 'max-h-0 opacity-0'
                 }`}>
@@ -441,7 +468,7 @@ export default function Login() {
                   </div>
                 </div>
                 
-                {/* Success Message */}
+                {/* Success  */}
                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     !confirmPasswordError && confirmPassword && confirmPasswordTouched ? 'max-h-20 opacity-100 mt-2' : 'max-h-0 opacity-0'
                 }`}>
@@ -456,7 +483,7 @@ export default function Login() {
               </div>
             )}
 
-            {/* Submit Button */}
+            {/*  Button */}
             <button
               type="submit"
               className="w-full py-2.5 sm:py-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 dark:shadow-blue-500/20 dark:hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-800 text-sm sm:text-base"
@@ -465,14 +492,14 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Terms */}
+          {/* Footer-terms */}
           <p className="mt-5 sm:mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
             By continuing, you agree to our{' '}
-            <a href="#" className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors underline">
+            <a href="/terms" className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors underline">
               Terms of Service
             </a>{' '}
             and{' '}
-            <a href="#" className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors underline">
+            <a href="/privacy" className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors underline">
               Privacy Policy
             </a>
             .

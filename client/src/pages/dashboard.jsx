@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react"
 import { useUserStore } from "../stores/userstore.js"
-import {  File,CirclePlus, FileUp, X, BarChart3, FileX2Icon,ArrowRight } from "lucide-react";
+import {  File,CirclePlus, FileUp, X, BarChart3, FileX2Icon,ArrowRight, Folder } from "lucide-react";
 import axios from "axios";
 import { mimeIconMap,GetIconByFileType } from "../utils/file-icon.jsx";
 import FileProcess from "../components/fileProcess.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import useHandleFileEdit from "../utils/edit-view-routes.jsx";
+import { useAppToast } from "../utils/use-toast.jsx";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Dashboard() {
 
@@ -19,6 +22,21 @@ export default function Dashboard() {
     const [searchActive, setSearchActive] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const handleFileEdit = useHandleFileEdit();
+    const hydrated = useUserStore((s) => s.hydrated);
+    const  toast  = useAppToast();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+         
+        const checkUser = async () =>{
+            if (hydrated && !user) {
+                navigate("/login", {replace: true});
+            }
+        }
+
+        checkUser();    
+
+    }, [user, hydrated, navigate]);
 
     const fetchFiles = async () => {
         try {
@@ -26,8 +44,13 @@ export default function Dashboard() {
                 params: { userId: user?.UserId },
                 withCredentials: true
             });
-            setFiles(response.data.files);
-            setFilteredFiles(response.data.files);
+
+            const combined = [
+            ...(response.data.directories || []).map(dir => ({ ...dir, type: 'directory' })),
+            ...(response.data.files || []).map(file => ({ ...file, type: 'file' }))
+            ];
+            setFiles(combined);
+            setFilteredFiles(combined);
         } catch (error) {
             console.error("Error fetching files:", error);
         }
@@ -66,7 +89,7 @@ export default function Dashboard() {
     };
 
     const handleFileClick = (file) => {
-        handleFileEdit(file);
+        file.type === 'directory' ? toast.info("Please Select from My Files Section !") : handleFileEdit(file);
         setSearchActive(false);
         setSearchQuery("");
     };
@@ -203,7 +226,7 @@ export default function Dashboard() {
                                             {filteredFiles.slice(0, 8).map((file, _index) => {
                                                 
                                                 const fileSize = (file.filesize / 1024).toFixed(2);
-                                                const fileExt = file.filename.split('.').pop().toUpperCase();
+                                                const fileExt = file.type == 'file' ? file.filename.split('.').pop().toUpperCase(): 'FOLDER';
                                                 
                                                 return (
                                                     <li 
@@ -214,17 +237,17 @@ export default function Dashboard() {
                                                         <div className="flex items-center gap-3">
                                                             {/* File Icon */}
                                                             <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                                                                <GetIconByFileType filetype={file.filetype} size={24} />
+                                                                <GetIconByFileType filetype={file.type === 'file' ? file.filetype : 'folder'} size={24} />
                                                             </div>
                                                             
                                                             {/* File Info */}
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                                                                    {file.filename}
+                                                                    {file.type === 'file' ? file.filename : file.dirName}
                                                                 </p>
                                                                 <div className="flex items-center gap-2 mt-0.5">
                                                                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                        {fileSize} KB
+                                                                        {file.type == 'file' ? `${fileSize} KB` : 'DIR'}
                                                                     </span>
                                                                     <span className="text-xs text-gray-400 dark:text-gray-600">•</span>
                                                                     <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium">
