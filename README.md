@@ -273,6 +273,24 @@ CREATE TABLE fdirectory (
   FOREIGN KEY (parentDirId) REFERENCES fdirectory(dirId) ON DELETE CASCADE
 );
 ```
+**Share Files Table**
+```sql
+create table sharedfile (
+	UserId int not null,
+    FileId int not null,
+    permission ENUM('r', 'w', 'x') not null,
+    primary key (UserId, FileId),
+    
+    constraint fk_uid_sf
+     foreign key (UserId) references userdata(UserId)
+    on delete cascade on update cascade,
+    
+    constraint fk_fid_sf
+     foreign key (FileId) references fileData(FileId)
+    on delete cascade on update cascade
+	)
+
+```
 
 ---
 
@@ -400,6 +418,14 @@ npm run preview
 
 ### Folders
 - `POST /api/files/dir` - Create new folder
+
+### Share Management
+- `GET /api/sf/shared-by-me` - Get files shared by user (I'm Owner)
+- `POST /api/sf/share` - Share the files based on selection
+- `DELETE /api/sf/share` - Remove Share link and Permission
+- `GET /api/sf/validate` - Validate the share link
+- `GET /api/sf/validate-share/:fileId/:permission` - Validate Share link based on the Permission and Id
+
 
 > **ATTENTION** </br>
     Please Note that ```sameSite``` change to none and ```secure``` change for true while production.
