@@ -37,6 +37,10 @@ export default function Login() {
 
   const toast = useAppToast();
   
+    useEffect(() =>{
+      document.title = "FileFlow | Authentication"
+    }, []);
+
     useEffect(() => {
          
         const checkUser = async () =>{

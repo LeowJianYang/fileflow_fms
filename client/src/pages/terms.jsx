@@ -1,8 +1,14 @@
+import { useEffect } from "react";
 import Navbar from "../components/navbar";
 import { Footer } from "../components/navbar";
 import { FileText, CheckCircle, AlertCircle, Scale, HardDrive } from "lucide-react";
 
 export default function Terms() {
+    
+    useEffect(() =>{
+      document.title = "FileFlow | Terms of Service"
+    }, []);
+
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
             <Navbar />

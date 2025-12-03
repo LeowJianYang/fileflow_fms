@@ -16,6 +16,7 @@ const app = express();
 
 app.use(express.json());
 app.use(parser());
+
 app.use(cors(
     {
         origin:allowedOrigin,
@@ -25,6 +26,7 @@ app.use(cors(
         exposedHeaders:["Content-Type", "Content-Length", "Cache-Control", "Pragma", "Expires"],
     }
   ));
+  app.options('*', cors()); // Enable pre-flight for all routes
   // app.get("*", (_req,res)=>{
   //   res.sendFile(path.join(__dirname, 'build', 'index.html'));
   // });

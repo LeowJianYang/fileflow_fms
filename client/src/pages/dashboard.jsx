@@ -27,6 +27,10 @@ export default function Dashboard() {
     const  toast  = useAppToast();
     const navigate = useNavigate();
 
+    useEffect(() =>{
+      document.title = "FileFlow | Dashboard"
+    }, []);
+
     useEffect(() => {
          
         const checkUser = async () =>{
