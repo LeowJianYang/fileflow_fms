@@ -26,7 +26,7 @@ app.use(cors(
         exposedHeaders:["Content-Type", "Content-Length", "Cache-Control", "Pragma", "Expires"],
     }
   ));
-  app.options('*', cors()); // Enable pre-flight for all routes
+  // app.options('*', cors()); // Enable pre-flight for all routes
   // app.get("*", (_req,res)=>{
   //   res.sendFile(path.join(__dirname, 'build', 'index.html'));
   // });
