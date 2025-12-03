@@ -7,7 +7,7 @@
 
 import React from "react";
 import {useState, useEffect} from "react";
-import "../style/modal.css"
+import "../style/Modal.css"
 import axios from "axios";
 import { Edit2Icon } from "lucide-react";
 
