@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --import ./utils/loadenv.js index.js"
+    "dev": "node --import ./utils/loadenv.js index.js",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "NICE/LJY",
