@@ -26,10 +26,10 @@ const TYPE_ICONS = {
 
 
 const TYPE_STYLES = {
-  success: "text-white dark:bg-green-600",
-  error: "text-white dark:bg-red-600",
-  info: "text-white dark:bg-blue-600",
-  warning: "text-black dark:bg-yellow-500 dark:text-black",
+  success: "dark:text-white text-black dark:bg-green-600 bg-[#f5f5f7]",
+  error: "dark:text-white text-black dark:bg-red-600 bg-[#f5f5f7]",
+  info: "dark:text-white text-black dark:bg-blue-600 bg-[#f5f5f7]",
+  warning: "dark:text-black dark:bg-yellow-500 dark:text-black bg-[#f5f5f7]",
 };
 
 /**

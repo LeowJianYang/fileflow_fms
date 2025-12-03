@@ -16,7 +16,7 @@ export const useUserStore = create(
       setUser: (user) => set({ user }),
 
      
-      login: async (email, password, remember = false) => {
+      login: async (email, password, { remember } = {}) => {
         set({ loading: true })
 
         try {

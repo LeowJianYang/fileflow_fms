@@ -28,6 +28,16 @@ fileRoute.post('/upload', upload.single('file'), async (req,res)=>{
     if (!user_id){
         return res.status(400).json({message:"User ID is required"});
     }
+    connection.query('select sum(filesize) as totalSize from fileData where UserId =?', [user_id], async (sizeError, sizeResults)=>{
+                if (sizeError){
+                    return res.status(500).json({message:"Database Error", error:sizeError.sqlState});
+                };
+                const totalSize = (sizeResults[0].totalSize / 1024).toFixed(2) || 0;
+                console.log(`Total storage used by user ${user_id}: ${totalSize} KB`);
+                
+                if (totalSize + (file.size / 1024) > 102400){
+                    return res.status(400).json({message:"Storage limit exceeded. Cannot upload file."});
+                } //100 MB limit
 
     if (is_directory === "true" || is_directory === true){
         try {
@@ -87,12 +97,12 @@ fileRoute.post('/upload', upload.single('file'), async (req,res)=>{
             return res.status(200).json({message:"File uploaded successfully", fileId: result.insertId});
         })
     }
-    
-
 });
 
+}); 
 
 
+// fetch list of files for a user
 fileRoute.get('/list', async (req,res) => {
 
      const {userId}= req.query;
@@ -104,15 +114,29 @@ fileRoute.get('/list', async (req,res) => {
     
             const fileresults = results;
 
-            connection.query('Select * from fdirectory where UserId =?', [userId], async (dirError, dirResults)=>{
-                if (dirError){
-                    return res.status(500).json({message:"Database Error", error:dirError.sqlState});
-                }
-                if (dirResults.length ===0){
-                    return res.status(200).json({files: fileresults, directories: []});
+            connection.query('select sum(filesize) as totalSize, count(*) as fileCount from fileData where UserId =?', [userId], async (sizeError, sizeResults)=>{
+                if (sizeError){
+                    return res.status(500).json({message:"Database Error", error:sizeError.sqlState});
                 };
-                return res.status(200).json({files: fileresults, directories: dirResults});
-            });
+                const totalSize = (sizeResults[0].totalSize / 1024).toFixed(2) || 0;
+                const fileCount = sizeResults[0].fileCount || 0;
+                console.log(`Total storage used by user ${userId}: ${totalSize} KB` + `, Total files: ${fileCount}`);
+                
+                connection.query('Select * from fdirectory where UserId =?', [userId], async (dirError, dirResults)=>{
+                    if (dirError){
+                        return res.status(500).json({message:"Database Error", error:dirError.sqlState});
+                    }
+                    if (dirResults.length ===0){
+                        return res.status(200).json({files: fileresults, directories: []});
+                    };
+                    return res.status(200).json({files: fileresults, directories: dirResults, totalSize: totalSize, fileCount: fileCount});
+                });
+            })
+            
+
+
+
+     
      })
 });
 
@@ -290,6 +314,7 @@ fileRoute.delete('/:id', async (req,res)=>{
     }
 });
 
+// Rename file or directory
 fileRoute.post('/up', (req, res) => {
     const { Newtitle, fileId, isDirectory, dirId } = req.body;
 
@@ -373,6 +398,7 @@ fileRoute.post('/up', (req, res) => {
     }
 );
 
+// Create new directory
 fileRoute.post('/dir', async(req,res)=>{
     const { userId, dirName, dirSub } = req.body;
 

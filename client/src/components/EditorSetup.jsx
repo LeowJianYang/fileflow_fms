@@ -2,7 +2,7 @@
 import { Editor } from "@monaco-editor/react";
 import { mimeTypeEditorMap } from "../utils/FileSelection";
 
-  const EditorTypes = ({ mime, content, onChange, onMount }) => {
+  const EditorTypes = ({ mime, content, onChange, onMount, disable=false }) => {
     if (!mime) return <div className="p-4">Loading file...</div>;
 
     if (mimeTypeEditorMap[mime]) {
@@ -15,11 +15,13 @@ import { mimeTypeEditorMap } from "../utils/FileSelection";
             onMount={onMount}
             onChange={onChange}
             theme="vs-dark"
+           
             options={{
               fontSize: 14,
               minimap: { enabled: window.innerWidth > 768 },
               wordWrap: "on",
               automaticLayout: true,
+              readOnly: disable
             }}
           />
         </div>

@@ -25,6 +25,7 @@ export default function Login() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const user = useUserStore((s) => s.user);
   const hydrated = useUserStore((s) => s.hydrated);
+  const [rememberMe, setRememberMe] = useState(false);
   
   // Validation states
   const [emailError, setEmailError] = useState('');
@@ -221,9 +222,9 @@ export default function Login() {
       console.log('Sign Up:', { username, email, password });
     } else {
       try{
-        await login(email,password);
-        
-        
+        await login(email,password, { remember: rememberMe });
+
+
         toast.success("Logged in successfully !",{position:"top-center"})
         navigate('/dashboard', { replace: true });
       } catch (error) {
@@ -247,12 +248,8 @@ export default function Login() {
 
         {/* Logo and Title */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-blue-500 dark:bg-blue-600 rounded-2xl mb-3 sm:mb-4 shadow-lg">
-            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-            </svg>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">FileFlow</h1>
+          <p className="text-slate-400 dark:text-slate-500">Your file management solution</p>
         </div>
 
         {/* Card */}
@@ -483,12 +480,27 @@ export default function Login() {
               </div>
             )}
 
+            { !isSignUp && (
+               <div className="flex items-center gap-2">
+                <input type='checkbox' onChange={(e)=>{setRememberMe(e.target.checked)}}/>
+
+                <label className="ml-2 text-sm text-slate-600 dark:text-slate-400">
+                  Remember me
+                </label>
+               </div>
+          
+            )}
+           
+
             {/*  Button */}
             <button
               type="submit"
-              className="w-full py-2.5 sm:py-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 dark:shadow-blue-500/20 dark:hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-800 text-sm sm:text-base"
+              className="w-full py-2.5 sm:py-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 dark:shadow-blue-500/20 dark:hover:shadow-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-800 text-sm sm:text-base cursor-pointer"
             >
               {isSignUp ? 'Create Account' : 'Login'}
+            </button>
+            <button type="button" onClick={()=>{navigate("/")}} className="w-full py-2.5 sm:py-3 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-gray-500/30 hover:shadow-gray-500/50 dark:shadow-gray-500/20 dark:hover:shadow-gray-500/40 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-800 text-sm sm:text-base cursor-pointer">
+              Back to Home
             </button>
           </form>
 

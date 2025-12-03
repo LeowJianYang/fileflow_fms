@@ -7,7 +7,6 @@ import App from './App.jsx'
 import { useThemeManager } from './stores/ThemeManager.js'
 import Login from './pages/login.jsx';
 import PageControl from './components/page-control.jsx';
-import Converter from './pages/converter.jsx';
 import FileEditor from './pages/Editor.jsx';
 import FileViewer from './pages/Viewer.jsx';
 import { ToastProvider } from './components/toast.jsx';
@@ -71,11 +70,12 @@ createRoot(document.getElementById('root')).render(
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Login />} />
         <Route path="/dashboard" element={<PageControl />} />
-        <Route path='/converter' element={<Converter />} />
         <Route path='/privacy' element={<Privacy />} />
         <Route path='/terms' element={<Terms />} />
         <Route path='/view/editor/:filename/:fileUtm' element={<FileEditor />} />
         <Route path='/view/viewer/:filename/:fileUtm' element={<FileViewer />} /> 
+        <Route path='/view/viewer/share/:p/:filename/:fileUtm' element={<FileViewer />} />
+        <Route path='/view/editor/share/:p/:filename/:fileUtm' element={<FileEditor />} />
         <Route path='*' element={<NotFound />} />
       </Routes>
       </AppWrapper>

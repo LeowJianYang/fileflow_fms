@@ -5,7 +5,7 @@ import { fileOptions, mimeIconTypesMap } from "../utils/FileSelection.js";
 import { GetIconByFileType } from "../utils/file-icon.jsx";
 import { FileIcon, Upload, X, FilePlus2, FolderPlus } from "lucide-react";
 import localdate from "../utils/dateModi.js";
-import axios from "axios";
+import axios, { all } from "axios";
 import { useAppToast } from "../utils/use-toast.jsx";
 
 /**
@@ -45,6 +45,9 @@ export default function FileProcess({
     createFolderOpen,
     currentDirId = null,
     isFolder = false, 
+    setOpenShareModal,
+    openShareModal,
+    allFiles =[]
 }) {
 
     const url = import.meta.env.VITE_API_URL;
@@ -61,6 +64,7 @@ export default function FileProcess({
 
     const [newFolderName, setNewFolderName] = useState("");
     const toast = useAppToast();
+    const [shareSelection, setShareSelection] = useState(null);
   
     const truncateFileName = (fileName, maxLength = 25) => {
         if (fileName.length <= maxLength) return fileName;
@@ -73,6 +77,13 @@ export default function FileProcess({
         
         return nameWithoutExt.substring(0, truncatedLength) + '...' + extension;
     };
+
+    const shareOptions = allFiles.map((files)=>({
+        value: files.FileId,
+        label: files.filename
+    }));
+
+
 
     const handleCreateNewFile = async (fileType, fileName) => {
         if (!fileName || !fileName.trim()) {
@@ -119,7 +130,7 @@ export default function FileProcess({
             return res.data;
         } catch (err) {
             console.error("Error creating file", err);
-            toast.error("Error creating file. Please try again.");
+            toast.error("Error creating file. Please try again. ERROR:" + err.response?.data?.message || '');
         }
     };
 
@@ -152,6 +163,59 @@ export default function FileProcess({
     const removeFile = () => {
         setFileToUpload(null);
         setUploadProgress(0);
+    };
+
+    const handleFileShare = async () => {
+        if (!shareSelection) {
+            toast.warning("Please select a file to share!");
+            return;
+        }
+
+        try {
+            // Get the selected file details
+            const selectedFileData = allFiles.find(f => f.FileId === shareSelection.value);
+            if (!selectedFileData) {
+                toast.error("File not found!");
+                return;
+            }
+
+            // Determine the file type and links
+            const isEditable = selectedFileData.filetype?.startsWith('text/') || 
+                              selectedFileData.filetype?.includes('javascript') ||
+                              selectedFileData.filetype?.includes('json') ||
+                              selectedFileData.filetype?.includes('markdown');
+            
+            const viewType = isEditable ? 'editor' : 'viewer';
+            
+            // Permission is 'r' (NOW) //
+            const permission = 'r';
+            
+         
+            const shareLink = `${window.location.origin}/view/${viewType}/share/${permission}/${encodeURIComponent(selectedFileData.FileId)}/${selectedFileData.filename}`;
+            
+          
+            const res = await axios.post(`${url}/api/sf/share`, {
+                userId: user?.UserId,
+                fileId: shareSelection.value,
+                permission: permission
+            }, { withCredentials: true });
+
+            // Copy link to clipboard
+            await navigator.clipboard.writeText(shareLink);
+            
+            toast.success("Share link copied to clipboard! (Read-only)", { duration: 3000 });
+            console.log("Share Link:", shareLink);
+            
+        } catch (error) {
+            console.error("Error sharing file:", error);
+            
+            //If clipboard fails, show the link in a toast
+            if (error.name === 'NotAllowedError') {
+                toast.error("Clipboard permission denied. Check console for link.");
+            } else {
+                toast.error("Error sharing file. Please try again.");
+            }
+        }
     };
 
     const handleUpload = async () => {
@@ -196,7 +260,7 @@ export default function FileProcess({
         } catch (error) {
             console.error("Error uploading file:", error);
             setIsUploading(false);
-            toast.error("Error uploading file. Please try again.");
+            toast.error("Error uploading file. Please try again. ERROR:" + error.response?.data?.message || '');
         }
     };
 
@@ -463,6 +527,7 @@ export default function FileProcess({
 
             </ModalForm>
 
+                {/* Delete File Modal */}
             <ModalForm
                 title="Delete File"
                 open={deleteModalOpen}
@@ -483,7 +548,7 @@ export default function FileProcess({
                 </div>
             </ModalForm>
 
-
+                {/* Create New Folder Modal */}
             <ModalForm
                 title="Create New Folder"
                 open={createFolderOpen}
@@ -503,6 +568,51 @@ export default function FileProcess({
                     <input type="text" placeholder="Folder Name" className="border border-gray-300 dark:border-gray-600 rounded-lg p-2 sm:p-2.5 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 dark:text-white text-black text-sm sm:text-base" 
                      onChange={(e) => setNewFolderName(e.target.value)}
                     />
+                </div>
+
+            </ModalForm>
+
+                {/* Share File Modal */}
+            <ModalForm
+                title="Share File"
+                open={openShareModal}
+                onCancel={() => setOpenShareModal(false)}
+                onOk={() => setOpenShareModal(false)}
+                footer={
+                <div className="flex flex-row gap-2 justify-center">
+                  <ModalButton onClick={() => setOpenShareModal(false)} type="danger"> Close </ModalButton>
+                  <ModalButton type="primary" onClick={() => { handleFileShare(); setOpenShareModal(false); }}>
+                      Share
+                  </ModalButton>
+                </div>}
+            >
+                <div className="mt-2 p-4 flex flex-col gap-4 justify-center items-center align-middle">
+                    <p className="font-semibold text-sm dark:text-white text-black">Select a File for sharing</p>
+                    <Select
+                        options={shareOptions}
+                        isSearchable={true}
+                        placeholder="Select file to share..."
+                        value={shareOptions.find(opt => opt.value === shareSelection?.value)}
+                        onChange={(selectedOption) => setShareSelection(selectedOption)}
+                        className="text-sm sm:text-base dark:bg-[#1e2939] bg-gray-400 dark:text-white text-black font-semibold w-full"
+                        styles={{
+                            menu: (base) => ({
+                                
+                                backgroundColor: 'var(--bg-color)',
+                                
+                            }),
+                            control: (base) => ({
+                                ...base,
+                                minWidth: '300px'
+                            })
+                        }}
+                    />
+                    
+                    {shareSelection && (
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                            Selected: <span className="font-semibold">{shareSelection.label}</span>
+                        </div>
+                    )}
                 </div>
 
             </ModalForm>

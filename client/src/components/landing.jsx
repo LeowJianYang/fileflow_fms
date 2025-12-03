@@ -9,17 +9,17 @@ export default function Landing() {
     const features = [
         {
             title: "Full CRUD Operations",
-            description: "Connect all your favorite apps and services effortlessly.",
+            description: "Create, Read, Update, and Delete your files with ease.",
             icon: <NotebookPen color="#154ab4"/>
         },
         {
             title: "Role based Access Control (RBAC)",
-            description: "AI-powered sorting and tagging for easy file management.",
+            description: "Secure your files with customizable access permissions.",
             icon: <ShieldCheck color="#154ab4"/>
         },
         {
             title: "Responsive Design",
-            description: "End-to-end encryption ensures your files are safe and secure.",
+            description: "Access your files seamlessly across all devices.",
             icon: <MonitorSmartphone color="#154ab4"/>
         },
         {
@@ -29,8 +29,8 @@ export default function Landing() {
         },
         
         {
-            title: "Build In File Conversion",
-            description: "Stay informed with real-time updates on your file activities.",
+            title: "Open Source",
+            description: "Transparent and community-driven development for trust and collaboration.",
             icon: <FileOutput color="#154ab4"/>
         },
 
@@ -64,7 +64,7 @@ export default function Landing() {
                     FileFlow offers a seamless, secure, and intelligent platform to manage your digital life. All your files, accessible from anywhere, with robust control and powerful features.
                 </p>
                 <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 w-full sm:w-auto px-4 sm:px-0">
-                    <button className="px-6 py-3 bg-[#4CAF50] text-black font-semibold rounded hover:opacity-75 transition-opacity text-sm sm:text-base w-full sm:w-auto" onClick={()=>{navigate('/login')}}>Get Started</button>
+                    <button className="px-6 py-3 bg-[#4CAF50] text-black font-semibold rounded hover:opacity-75 transition-opacity text-sm sm:text-base w-full sm:w-auto cursor-pointer" onClick={()=>{navigate('/login')}}>Get Started</button>
                     <button className="px-6 py-3 bg-[#292d37] text-white font-semibold rounded hover:opacity-75 transition-opacity text-sm sm:text-base w-full sm:w-auto">Learn More</button>
                 </div>
             </div>

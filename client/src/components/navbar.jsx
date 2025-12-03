@@ -71,11 +71,11 @@ export default function Navbar() {
         </div>
           
         {/* Desktop Navigation */}
-        <nav className='hidden lg:flex justify-center items-center text-gray-900 dark:text-white flex-row gap-3.5'>
+        {/* <nav className='hidden lg:flex justify-center items-center text-gray-900 dark:text-white flex-row gap-3.5'>
           <button className='px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/dashboard', { replace: true })}>File Manager</button>
-          <button className='px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/profile', { replace: true })}>Profile</button>
+          <button className='px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/', { replace: true })}>Profile</button>
           <button className='px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/conversion', { replace: true })}>Conversion</button>
-        </nav>
+        </nav> */}
 
         {/* Desktop */}
         <div className='hidden lg:flex flex-row gap-4 items-center justify-end'>
@@ -135,22 +135,11 @@ export default function Navbar() {
               <nav className='flex flex-col gap-2 p-4'>
                 <button 
                   className='px-4 py-3 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-left text-gray-900 dark:text-white font-medium' 
-                  onClick={() => handleNavigation('/filemanager')}
+                  onClick={() => handleNavigation('/dashboard')}
                 >
                   File Manager
                 </button>
-                <button 
-                  className='px-4 py-3 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-left text-gray-900 dark:text-white font-medium' 
-                  onClick={() => handleNavigation('/profile')}
-                >
-                  Profile
-                </button>
-                <button 
-                  className='px-4 py-3 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-left text-gray-900 dark:text-white font-medium' 
-                  onClick={() => handleNavigation('/conversion')}
-                >
-                  Conversion
-                </button>
+            
 
                 {/* Auth Section */}
                 <div className='mt-4 pt-4 border-t-2 border-gray-200 dark:border-gray-700'>
@@ -195,45 +184,6 @@ export default function Navbar() {
   );
 }
 
-export function ConverterBar () {
-  const navigate = useNavigate();
-  const theme = useThemeManager((s) => s.theme);
-  const toggleTheme = useThemeManager((s) => s.toggleTheme);
-  const user = useUserStore((s) => s.user);
-  const loading = useUserStore((s) => s.loading);
-
-
-  return (
-    <div className='w-full h-full flex flex-col bg-white dark:bg-gray-900 p-4 border-b-2 border-gray-200 dark:border-gray-700'>
-      
-      <div className='flex flex-row justify-between items-center'>
-      <h3 className='items-center text-gray-900 dark:text-white font-bold'>
-        <Database size={24} className="inline-block mr-2 mb-1"/> File Converter
-      </h3>
-      <nav className='flex justify-between items-center p-4 text-gray-900 dark:text-white flex-row gap-3.5'>
-      <button className='px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/dashboard', { replace: true })}>Dashboard</button>
-      <button className='px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/dashboard#-my-files', { replace: true })}>My Files</button>
-      <button className='px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' onClick={() => navigate('/converter', { replace: true })}>Conversion</button>
-      {user != null && loading!=true ? (
-        <>
-              <p className='text-gray-900 dark:text-white flex flex-row gap-2 justify-between items-center '><User size={20}/> {user.Username} 
-                <hr className="mx-4 h-6 border-l border-gray-300 dark:border-gray-400"/></p>
-              <button className='px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white font-medium' onClick={() => handleLogout()}>Logout</button>
-        </>
-      ):(
-        <button className='rounded justify-center items-center p-1.2 bg-[#4CAF50] cursor-pointer w-20 h-10 text-black font-bold hover:opacity-55 hover:transition-opacity' onClick={() => navigate('/login')}>Login</button>
-      )}
-
-      <button onClick={toggleTheme} className='px-3 py-2 rounded bg-yellow-400 dark:bg-blue-600 hover:bg-yellow-500 dark:hover:bg-blue-700 transition-colors'>
-            {theme === 'light' ? <Moon className="text-gray-900" /> : <Sun className="text-white" />}
-      </button>
-
-    </nav>
-    </div>
-    </div>
- 
-  );
-}
 
 
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useUserStore } from "../stores/userstore.js"
 import {  File,CirclePlus, FileUp, X, BarChart3, FileX2Icon,ArrowRight, Folder } from "lucide-react";
 import axios from "axios";
-import { mimeIconMap,GetIconByFileType } from "../utils/file-icon.jsx";
+import { GetIconByFileType } from "../utils/file-icon.jsx";
 import FileProcess from "../components/fileProcess.jsx";
 import SearchBar from "../components/SearchBar.jsx";
 import useHandleFileEdit from "../utils/edit-view-routes.jsx";
@@ -22,6 +22,7 @@ export default function Dashboard() {
     const [searchActive, setSearchActive] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const handleFileEdit = useHandleFileEdit();
+    const [total, setTotal] = useState({ size: 0, count: 0 });
     const hydrated = useUserStore((s) => s.hydrated);
     const  toast  = useAppToast();
     const navigate = useNavigate();
@@ -51,6 +52,13 @@ export default function Dashboard() {
             ];
             setFiles(combined);
             setFilteredFiles(combined);
+       
+            const totalSizeInMB = response.data.totalSize / 1024;
+            const fileCount = response.data.fileCount;
+            setTotal({
+                size: totalSizeInMB,
+                count: fileCount,
+            });
         } catch (error) {
             console.error("Error fetching files:", error);
         }
@@ -72,12 +80,11 @@ export default function Dashboard() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [searchActive]);
 
-    const dummyFiles = [
-        { name: "ProjectProposal.docx", modified: "2024-06-10", size: "120 KB" },
-        // { name: "MeetingNotes.txt", modified: "2024-06-12", size: "15 KB" },
-        { name: "Budget.xlsx", modified: "2024-06-11", size: "85 KB" },
-        { name: "Presentation.pptx", modified: "2024-06-09", size: "2 MB" },
-    ]
+    // Get quick access files 
+    const quickAccessFiles = files
+        .filter(item => item.type === 'file') // Only files
+        .sort((a, b) => new Date(b.modifiedat) - new Date(a.modifiedat)) // Sort by most recent
+        .slice(0, 7); // Get top 7 files
 
     const handleAddModal = () =>{
         setAddModalOpen(true);
@@ -94,6 +101,8 @@ export default function Dashboard() {
         setSearchQuery("");
     };
 
+    
+
     // Sidebar Component 
     const SidebarContent = () => (
         <>
@@ -108,34 +117,42 @@ export default function Dashboard() {
                         <div
                             className="absolute inset-0 rounded-full"
                             style={{
-                                background: `conic-gradient(#2563eb 0% 65%, transparent 65% 100%)`,
+                                background: `conic-gradient(#2563eb 0% ${((total.size / 100) * 100 || 0).toFixed(1)}%, transparent ${((total.size / 100) * 100 || 0).toFixed(1)}% 100%)`,
                             }}
                         ></div>
                         <div className="absolute inset-2 bg-white dark:bg-[#111a22] rounded-full flex items-center justify-center">
                             <div className="text-center">
-                                <span className="text-2xl sm:text-3xl font-bold text-black dark:text-white block">65%</span>
+                                <span className="text-2xl sm:text-3xl font-bold text-black dark:text-white block">{((total.size / 100) * 100 || 0).toFixed(1)}%</span>
                                 <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Used</span>
                             </div>
                         </div>
                     </div>
                     
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center px-2">
-                        You have used 65% of your storage capacity.
+                        {(total.size || 0).toFixed(2)} MB of 100 MB used ({((total.size / 100) * 100 || 0).toFixed(1)}%)
                     </p>
                 </div>
             </div>    
             
-            {/* STATISTICS right hand bottom */}
+            {/* STATISTICS */}
             <div className="p-4 sm:p-6 bg-white dark:bg-[#111a22] rounded-lg shadow-sm border border-gray-300 dark:border-gray-700">
                 <h3 className="text-lg sm:text-xl font-semibold text-black dark:text-white mb-4">Statistics</h3>
                 <div className="flex flex-col gap-3 sm:gap-4">
                     <div className="flex justify-between items-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Total Files</span>
-                        <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">100</span>
+                        <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                            <File size={16} className="text-blue-500" />
+                            Total Files
+                        </span>
+                        <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">{total.count || 0}</span>
                     </div>
                     <div className="flex justify-between items-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Total Folders</span>
-                        <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">25</span>
+                        <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                            <Folder size={16} className="text-yellow-500" />
+                            Total Folders
+                        </span>
+                        <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
+                            {files.filter(item => item.type === 'directory').length || 0}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -300,71 +317,77 @@ export default function Dashboard() {
             {/* Main Content  */}
             <div className="flex flex-col xl:flex-row gap-4 sm:gap-6">
 
-                {/* Left Column - Quick Access & Recent Activity */}
+                {/* Left Column  */}
                 <div className="flex-1 space-y-4 sm:space-y-6">
                     {/* QUICK ACCESS */}
                     <div className="mt-4 sm:mt-6 p-4 sm:p-6 bg-white dark:bg-[#111a22] rounded-lg shadow-sm border border-gray-300 dark:border-gray-700">
-                        <h2 className="text-xl sm:text-2xl font-bold text-black dark:text-white mb-4">Quick Access</h2>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl sm:text-2xl font-bold text-black dark:text-white">Quick Access</h2>
+                            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                                Recently Modified
+                            </span>
+                        </div>
                         
                         {/* File Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
-                            {dummyFiles.map((file) => {
-                                const displayName = file.name.length > 10 
-                                        ? file.name.slice(0, 10) + "..." 
-                                        : file.name;
-
-                                return (
-                                    <div 
-                                        key={file.name} 
-                                        className="p-3 sm:p-4 border bg-gray-50 dark:bg-[#101922] border-gray-300 dark:border-gray-700 
-                                                    rounded-lg flex flex-col gap-2 justify-center items-center 
-                                                    hover:shadow-md transition-shadow cursor-pointer"
-                                    >
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12">
-                                            {mimeIconMap[file.name.split('.').pop()] || <File color="#9ca3af" size={40} className="sm:w-12 sm:h-12"/>}
-                                        </div>
-
-                                        <h3 className="font-semibold text-black dark:text-white text-sm sm:text-base text-center">
-                                            {displayName}
-                                        </h3>
-
-                                        <p className="text-gray-600 dark:text-gray-400 text-[10px] sm:text-xs text-center">
-                                            Modified: {file.modified}
-                                        </p>
-                                        <p className="text-gray-600 dark:text-gray-400 text-[10px] sm:text-xs">
-                                            Size: {file.size}
-                                        </p>
+                            {quickAccessFiles.length === 0 ? (
+                                /* Empty State */
+                                <div className="col-span-full flex flex-col items-center justify-center py-12 px-4">
+                                    <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                        <File size={32} className="text-gray-400 dark:text-gray-600"/>
                                     </div>
-                                );
-                            })}
-                            
-                            {/* Add New Card */}
-                            {dummyFiles.length <= 4 && (
-                                <div className="p-3 sm:p-4 border bg-gray-50 dark:bg-[#101922] border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col gap-2 justify-center items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                                    <CirclePlus color="#9ca3af" size={40} className="sm:w-12 sm:h-12"/>
-                                    <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Add new</p>
-                                    <p className="text-gray-600 dark:text-gray-400 text-[10px] sm:text-xs">file or folder</p>
+                                    <p className="text-gray-900 dark:text-white font-medium mb-1">No files yet</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Upload or create a file to get started</p>
                                 </div>
+                            ) : (
+                                <>
+                                    {quickAccessFiles.map((file) => {
+                                        const displayName = file.filename.length > 15 
+                                                ? file.filename.slice(0, 15) + "..." 
+                                                : file.filename;
+                                        const fileSize = (file.filesize / 1024).toFixed(2);
+                                    
+
+                                        return (
+                                            <div 
+                                                key={file.FileId} 
+                                                onClick={() => handleFileEdit(file)}
+                                                className="p-3 sm:p-4 border bg-gray-50 dark:bg-[#101922] border-gray-300 dark:border-gray-700 
+                                                            rounded-lg flex flex-col gap-2 justify-center items-center 
+                                                            hover:shadow-md hover:border-blue-400 dark:hover:border-blue-600 transition-all cursor-pointer group"
+                                            >
+                                                <div className="w-10 h-10 sm:w-12 sm:h-12 transition-transform group-hover:scale-110">
+                                                    <GetIconByFileType filetype={file.filetype} size={48} />
+                                                </div>
+
+                                                <h3 className="font-semibold text-black dark:text-white text-sm sm:text-base text-center group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" title={file.filename}>
+                                                    {displayName}
+                                                </h3>
+
+                                                <p className="text-gray-600 dark:text-gray-400 text-[10px] sm:text-xs">
+                                                    {fileSize} KB
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                    
+                                    {/* Add New Card */}
+                                    {quickAccessFiles.length < 8 && (
+                                        <div 
+                                            onClick={() => setAddModalOpen(true)}
+                                            className="p-3 sm:p-4 border bg-gray-50 dark:bg-[#101922] border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col gap-2 justify-center items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all group"
+                                        >
+                                            <CirclePlus className="text-gray-400 group-hover:text-blue-500 transition-colors" size={40} />
+                                            <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Add new</p>
+                                            <p className="text-gray-600 dark:text-gray-400 text-[10px] sm:text-xs">file or folder</p>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
-                    {/* RECENT ACTIVITY */}
-                    <div className="p-4 sm:p-6 bg-white dark:bg-[#111a22] rounded-lg shadow-sm border border-gray-300 dark:border-gray-700">
-                        <h3 className="text-lg sm:text-xl font-bold text-black dark:text-white mb-4">Recent Activity</h3>
-                        <div className="flex flex-col gap-3 sm:gap-4">
-                            <div className="flex flex-row gap-3 sm:gap-4 items-center p-2 sm:p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                                <div className="p-2 sm:p-3 bg-blue-100 dark:bg-[#172a56] rounded-full shrink-0">
-                                    <FileUp color="#4ade80" size={20} className="sm:w-6 sm:h-6"/>
-                                </div>
-                                <div className="flex flex-col justify-between flex-1 min-w-0">
-                                    <span className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm truncate">
-                                        Uploaded <span className="text-blue-500 dark:text-[#2b8ce8] font-bold">"Budget.xlsx"</span>
-                                    </span>
-                                    <span className="text-gray-500 dark:text-gray-500 text-[10px] sm:text-xs">2 hours ago</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                 
+                    
                 </div>
 
                 {/* Right Column - (Desktop Only) */}

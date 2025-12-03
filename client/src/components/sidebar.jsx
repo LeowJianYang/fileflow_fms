@@ -1,13 +1,15 @@
 import { useState } from "react"
 import { useUserStore } from "../stores/userstore"
-import { LayoutDashboard, FileBox, ArrowLeftRight, Folder, Menu, X, Image,Files,Video,ListMusic} from "lucide-react";
+import { LayoutDashboard, FileBox, Folder, Menu, X} from "lucide-react";
 import { useTabDataStore } from "../stores/tab-data";
 import { useNavigate } from "react-router-dom";
 import slug from '../utils/slug';
 
+
 export default function Sidebar({onTabChange}) {
 
     const user = useUserStore((s) => s.user);
+    const logout = useUserStore((s) => s.logout);
     const { tab, setTab } = useTabDataStore();
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
@@ -15,7 +17,7 @@ export default function Sidebar({onTabChange}) {
     const handleTabChange = (newTab) => {
         onTabChange(newTab);
         setTab(newTab);
-        // hash so refresh preserves tab without needing a router path
+  
         try{
             const hashed = slug(newTab) || newTab;
             window.location.hash = `-${hashed}`;
@@ -76,10 +78,10 @@ export default function Sidebar({onTabChange}) {
                     transition-colors duration-200`}
                 >
                     <FileBox size={20} />
-                    Shared with Me
+                    Shared Files
                 </button>
 
-                <button
+                {/* <button
                     onClick={() => navigate('/converter')}
                     className={`text-sm sm:text-base font-semibold text-left px-3 py-2.5 rounded-lg flex items-center gap-3
                     ${tab === 'converter' 
@@ -89,36 +91,16 @@ export default function Sidebar({onTabChange}) {
                 >
                     <ArrowLeftRight size={20} />
                     Converter
-                </button>
-
-                {tab === 'my-files' && (
-                     <>
-                        <hr className="my-2 border-gray-300 dark:border-gray-700"/>
-                        <p className="text-sm text-gray-500 font-semibold">FILTERS</p>
-                        
-                        <div className="flex flex-row gap-2 mt-6 items-center">
-                            <Image size={20} className="dark:text-white text-black"/>
-                            <button className="text-sm dark:text-gray-200 text-gray-600 "> Images</button>
-                        </div>
-                        <div className="flex flex-row gap-2 mt-4 items-center">
-                            <Files size={20} className="dark:text-white text-black"/>
-                            <button className="text-sm dark:text-gray-200 text-gray-600"> Documents</button>
-                        </div>
-                        <div className="flex flex-row gap-2 mt-4 items-center">
-                            <Video size={20} className="dark:text-white text-black"/>
-                            <button className="text-sm dark:text-gray-200 text-gray-600"> Videos</button>
-                        </div>
-
-                        <div className="flex flex-row gap-2 mt-4 items-center">
-                            <ListMusic size={20} className="dark:text-white text-black"/>
-                            <button className="text-sm dark:text-gray-200 text-gray-600"> Audio</button>
-                        </div>
-                     </>
+                </button> */}
 
 
-                )}
+                
 
-
+                <div>
+                    <button className="w-full mt-6 px-3 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm sm:text-base font-semibold rounded-lg transition-colors duration-200 cursor-pointer" onClick={()=>{logout(); navigate('/login')}}>
+                        Logout
+                    </button>
+                </div>
 
             </nav>
         </div>
@@ -152,7 +134,7 @@ export default function Sidebar({onTabChange}) {
                     <button 
                         onClick={() => setIsOpen(false)}
                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                        aria-label="Close menu"
+                    
                     >
                         <X size={20} className="text-gray-600 dark:text-gray-400" />
                     </button>

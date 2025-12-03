@@ -182,15 +182,18 @@ export default function Files() {
                         <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Try adjusting your search query</p>
                     </div>
                 ) : (
-                <div className={`${isGridView ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4' : 'flex flex-col gap-4'}`}>
+                <>
+                {/* Grid View */}
+                {isGridView ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
                             {filteredItems.map((item) => {
                                 const isDirectory = item.itemType === 'directory';
                                 const displayName = isDirectory 
-                                    ? (item.dirName.length > (isGridView ? 10 : 20) 
-                                        ? item.dirName.slice(0, isGridView ? 10 : 20) + "..." 
+                                    ? (item.dirName.length > 10 
+                                        ? item.dirName.slice(0, 10) + "..." 
                                         : item.dirName)
-                                    : (item.filename.length > (isGridView ? 10 : 20) 
-                                        ? item.filename.slice(0, isGridView ? 10 : 20) + "..." 
+                                    : (item.filename.length > 10 
+                                        ? item.filename.slice(0, 10) + "..." 
                                         : item.filename);
 
                                 return (
@@ -199,7 +202,7 @@ export default function Files() {
                                             <div 
                                                 onClick={()=>{handleItemClick(item)}} 
                                                 className={`p-3 sm:p-4 border ${isDirectory ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-gray-50 dark:bg-[#101922]'} border-gray-300 dark:border-gray-700 
-                                                            rounded-lg flex ${isGridView ? 'flex-col justify-center' : 'flex-row justify-between'} gap-2 items-center 
+                                                            rounded-lg flex flex-col justify-center gap-2 items-center 
                                                             hover:shadow-md transition-shadow cursor-pointer relative group`}
                                             >
                                                 {/* Dropdown menu button */}
@@ -260,7 +263,8 @@ export default function Files() {
                                                         <GetIconByFileType filetype={item.filetype} size={40}/> || <File color="#9ca3af" size={40} className="sm:w-12 sm:h-12"/>
                                                     )}
                                                 </div>
-
+                                                
+                                                {/* File Name */}
                                                 <h3 className="font-semibold text-black dark:text-white text-sm sm:text-base text-center break-all">
                                                     {displayName}
                                                 </h3>
@@ -326,6 +330,166 @@ export default function Files() {
                                 );
                             })}
                         </div>
+                ) : (
+                    /* Table View (List View) */ 
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-300 dark:border-gray-700">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">Type</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">Modified</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider hidden sm:table-cell">Size</th>
+                                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                    {filteredItems.map((item) => {
+                                        const isDirectory = item.itemType === 'directory';
+                                        const displayName = isDirectory ? item.dirName : item.filename;
+                                        
+                                        return (
+                                            <ContextMenu.Root key={isDirectory ? `dir-${item.dirId}` : `file-${item.FileId}`}>
+                                                <ContextMenu.Trigger asChild>
+                                                    <tr 
+                                                        onClick={() => handleItemClick(item)}
+                                                        className={`${isDirectory ? 'bg-blue-50/50 dark:bg-blue-950/10' : ''} hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors`}
+                                                    >
+                                                        {/* Name Column */}
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="shrink-0">
+                                                                    {isDirectory ? (
+                                                                        <Folder color="#3b82f6" fill="#93c5fd" size={24} />
+                                                                    ) : (
+                                                                        <GetIconByFileType filetype={item.filetype} size={24} /> || <File color="#9ca3af" size={24} />
+                                                                    )}
+                                                                </div>
+                                                                <span className="font-medium text-gray-900 dark:text-white truncate max-w-xs" title={displayName}>
+                                                                    {displayName}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        
+                                                        {/* Type Column */}
+                                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 hidden md:table-cell">
+                                                            {isDirectory ? 'Folder' : item.filetype?.split('/')[1]?.toUpperCase() || 'File'}
+                                                        </td>
+                                                        
+                                                        {/* Modified Column */}
+                                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 hidden lg:table-cell">
+                                                            {isDirectory ? '-' : localdate(item.lastModified)}
+                                                        </td>
+                                                        
+                                                        {/* Size Column */}
+                                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 hidden sm:table-cell">
+                                                            {isDirectory ? '-' : `${(item.filesize / 1024).toFixed(2)} KB`}
+                                                        </td>
+                                                        
+                                                        {/* Actions (Dropdown) Column */}
+                                                        <td className="px-4 py-3 text-right">
+                                                            <DropdownMenu.Root>
+                                                                <DropdownMenu.Trigger asChild>
+                                                                    <button
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                                                    >
+                                                                        <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
+                                                                    </button>
+                                                                </DropdownMenu.Trigger>
+                                                                
+                                                                <DropdownMenu.Portal>
+                                                                    <DropdownMenu.Content
+                                                                        className="min-w-[180px] bg-white dark:bg-[#1b1b1b] rounded-md shadow-lg border border-gray-200 dark:border-gray-700 p-1 z-50"
+                                                                        sideOffset={5}
+                                                                    >
+                                                                        {isDirectory ? (
+                                                                            <>
+                                                                                <DropdownMenu.Item
+                                                                                    className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer outline-none"
+                                                                                    onClick={(e) => { e.stopPropagation(); enterDirectory(item); }}
+                                                                                >
+                                                                                    Open Folder
+                                                                                </DropdownMenu.Item>
+                                                                                <DropdownMenu.Item
+                                                                                    className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer outline-none"
+                                                                                    onClick={(e) => { e.stopPropagation(); setDeleteModalOpen(true); setSelectedFile(item); }}
+                                                                                >
+                                                                                    Delete
+                                                                                </DropdownMenu.Item>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <DropdownMenu.Item
+                                                                                    className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer outline-none"
+                                                                                    onClick={(e) => { e.stopPropagation(); handleFileEdit(item); }}
+                                                                                >
+                                                                                    Edit/View
+                                                                                </DropdownMenu.Item>
+                                                                                <DropdownMenu.Item
+                                                                                    className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer outline-none"
+                                                                                    onClick={(e) => { e.stopPropagation(); setDeleteModalOpen(true); setSelectedFile(item); }}
+                                                                                >
+                                                                                    Delete
+                                                                                </DropdownMenu.Item>
+                                                                            </>
+                                                                        )}
+                                                                    </DropdownMenu.Content>
+                                                                </DropdownMenu.Portal>
+                                                            </DropdownMenu.Root>
+                                                        </td>
+                                                    </tr>
+                                                </ContextMenu.Trigger>
+                                                
+                                                <ContextMenu.Portal>
+                                                    <ContextMenu.Content
+                                                        className="min-w-[220px] overflow-hidden rounded-md bg-white dark:bg-[#1b1b1b] p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,23,24,0.35),0px_10px_20px_-15px_rgba(22,23,24,0.2)] border border-gray-300 dark:border-white"
+                                                        sideOffset={5}
+                                                        align="end"
+                                                    >
+                                                        {isDirectory ? (
+                                                            <>
+                                                                <ContextMenu.Item 
+                                                                    className="dark:text-white text-xl text-black relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-violet11 outline-none data-disabled:pointer-events-none data-highlighted:bg-[#242424] data-disabled:text-mauve8 data-highlighted:text-white" 
+                                                                    onClick={() => { enterDirectory(item); }}
+                                                                >
+                                                                    Open Folder
+                                                                </ContextMenu.Item>
+                                                                <ContextMenu.Item 
+                                                                    className="text-red-500 text-xl font-semibold relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-violet11 outline-none data-disabled:pointer-events-none data-highlighted:bg-[#242424] data-disabled:text-mauve8 data-highlighted:text-white" 
+                                                                    onClick={() => { setDeleteModalOpen(true); setSelectedFile(item); }}
+                                                                >
+                                                                    Delete
+                                                                </ContextMenu.Item>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <ContextMenu.Item 
+                                                                    className="dark:text-white text-xl text-black relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-violet11 outline-none data-disabled:pointer-events-none data-highlighted:bg-[#242424] data-disabled:text-mauve8 data-highlighted:text-white" 
+                                                                    onClick={() => { handleFileEdit(item); }}
+                                                                >
+                                                                    Edit/View
+                                                                </ContextMenu.Item>
+                                                                <ContextMenu.Item 
+                                                                    className="text-red-500 text-xl font-semibold relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-violet11 outline-none data-disabled:pointer-events-none data-highlighted:bg-[#242424] data-disabled:text-mauve8 data-highlighted:text-white" 
+                                                                    onClick={() => { setDeleteModalOpen(true); setSelectedFile(item); }}
+                                                                >
+                                                                    Delete
+                                                                </ContextMenu.Item>
+                                                            </>
+                                                        )}
+                                                    </ContextMenu.Content>
+                                                </ContextMenu.Portal>
+                                            </ContextMenu.Root>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+                </>
                 )}
 
             </div>

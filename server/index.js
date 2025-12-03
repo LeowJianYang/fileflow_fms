@@ -7,6 +7,7 @@ import cors from 'cors';
 import authRouter from './src/routes/auth.js';
 import fileRoute from './src/routes/files.js';
 import CookieMiddleware from './src/middleware/cookie-auth.js';
+import sharedRouter from './src/routes/share.js';
 
 const allowedOrigin = process.env.WEB_URL; 
 
@@ -30,6 +31,7 @@ app.use(cors(
   
 app.use('/api/auth', authRouter);
 app.use('/api/files', CookieMiddleware ,fileRoute);
+app.use('/api/sf', CookieMiddleware ,sharedRouter);
 
 
 const PORT = process.env.PORT || 5000;

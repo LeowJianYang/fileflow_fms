@@ -12,9 +12,13 @@ import { useAppToast } from "../utils/use-toast.jsx";
 
 export default function FileEditor() {
   const url = import.meta.env.VITE_API_URL;
-  const { filename, fileUtm } = useParams();
-  const decoded = decodeURIComponent(filename);
-  const decodedFileName = decodeURIComponent(fileUtm);
+  const { p, filename, fileUtm } = useParams();
+  
+
+  const fileId = filename; // This is the FileId
+  const actualFileName = fileUtm ? decodeURIComponent(fileUtm) : '';
+  const permission = p || null; // 'r', 'w', 'x' or null
+  
   const user = useUserStore((s) => s.user);
   const hydrated = useUserStore((s) => s.hydrated);
 
@@ -24,12 +28,17 @@ export default function FileEditor() {
   const [files, setFiles] = useState([]);
   const [currentFileData, setCurrentFileData] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSharedFile, setIsSharedFile] = useState(false);
   const [render, setRender] = useState(null);
   const navigate = useNavigate();
   const  toast  = useAppToast();
   
     useEffect(() => {
-         
+        // Skip login check if this is a shared file 
+        if (permission !== null) {
+            return;
+        }
+        
         const checkUser = async () =>{
             if (hydrated && !user) {
                 navigate("/login", {replace: true});
@@ -38,11 +47,53 @@ export default function FileEditor() {
 
         checkUser();    
 
-    }, [user, hydrated, navigate]);
+    }, [user, hydrated, navigate, permission]);
+
+    
+    // Validate shared file access
+    useEffect(()=>{
+         if (permission !== null && fileId){
+            
+             const validateShare = async () => {
+                 try {
+                     const res = await axios.get(`${url}/api/sf/validate-share/${fileId}/${permission}`);
+                   
+                     
+                     if (res.data.valid){
+                          toast.success("Access granted to shared file.");
+                          
+                          // Set file metadata from validation response
+                          if (res.data.file) {
+                           
+                              setCurrentFileData({
+                                  FileId: res.data.file.FileId,
+                                  filename: res.data.file.filename,
+                                  filetype: res.data.file.filetype,
+                                  filesize: res.data.file.filesize,
+                                  filepath: res.data.file.filepath
+                              });
+                          }
+                          
+                          // Mark as shared file - this will trigger the file fetch useEffect
+                   
+                          setIsSharedFile(true);
+                      }
+                 } catch (err) {
+                     toast.error("Invalid share link or permission denied.");
+                     navigate("/not-found", {replace: true});
+                 }
+             };
+             
+             validateShare();
+         }
+    }, [permission, fileId]);
 
 
-  // Fetch file 
+  // Fetch file list (only for own files, not shared files)
   useEffect(() => {
+    // Skip if this is a shared file
+    if (isSharedFile) return;
+    
     const fetchFiles = async () => {
       try {
         const response = await axios.get(`${url}/api/files/list`, {
@@ -52,7 +103,7 @@ export default function FileEditor() {
         setFiles(response.data.files);
         
        
-        const current = response.data.files.find(f => f.FileId === parseInt(decoded));
+        const current = response.data.files.find(f => f.FileId === parseInt(fileId));
         setCurrentFileData(current);
       } catch (error) {
         console.error("Error fetching files:", error);
@@ -62,11 +113,11 @@ export default function FileEditor() {
     if (user?.UserId) {
       fetchFiles();
     }
-  }, [user?.UserId, decoded]);
+  }, [user?.UserId, fileId, isSharedFile]);
 
 
   useEffect(() => {
-    // Cleanup previous blob URL when switching files
+    // Cleanup previous blob URL 
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
       blobUrlRef.current = null;
@@ -77,8 +128,8 @@ export default function FileEditor() {
     setMime("");
     setRender(null);
     
-    if (!decoded) {
-      console.log("No file ID (decoded) provided");
+    if (!fileId) {
+      console.log("No file ID provided");
       return;
     }
     
@@ -87,12 +138,20 @@ export default function FileEditor() {
       return;
     }
     
+    // If this is a shared file, wait for validation to complete
+    if (permission !== null && !isSharedFile) {
+     
+      return;
+    }
+    
+   
+    
     const fetchFileContent = async () => {
       
       
       try {
-        // Cache-busting timestamp to prevent stale headers
-        const apiUrl = `${url}/api/files/${decoded}?t=${Date.now()}`;
+        //  prevent stale headers
+        const apiUrl = `${url}/api/files/${fileId}?t=${Date.now()}`;
        
         
         // make a request to check content type
@@ -109,7 +168,7 @@ export default function FileEditor() {
         setMime(contentType);
         
         // For text-based files (markdown, plain text, code), fetch as JSON/text
-        // Backend sends markdown as application/json with {type, content}
+        //  sends markdown as application/json with {type, content}
         if (contentType?.startsWith('text/') || 
             contentType?.startsWith('application/json') ||
             contentType === 'application/javascript') {
@@ -125,7 +184,7 @@ export default function FileEditor() {
           console.log("Response data type:", typeof res.data);
           console.log("Response data:", res.data);
           
-          // Backend sends {type, content} for text files
+          //  sends{type, content} for text files
           if (res.data && typeof res.data === 'object' && res.data.content) {
             
 
@@ -178,7 +237,7 @@ export default function FileEditor() {
         blobUrlRef.current = null;
       }
     };
-  }, [decoded, url]);
+  }, [fileId, url, permission, isSharedFile]);
 
 
 
@@ -206,11 +265,11 @@ export default function FileEditor() {
             }
             else if (mime.startsWith('video/')|| mime.startsWith('audio/')) {
 
-            setRender(<VideoViewer fileUrl={fileContent} fileName={decodedFileName} mimeType={mime} isAudio={mime.startsWith('audio/')} />);
+            setRender(<VideoViewer fileUrl={fileContent} fileName={actualFileName} mimeType={mime} isAudio={mime.startsWith('audio/')} />);
             }
             else if (mime.startsWith('image/')) {
-            setRender(<ImageViewer fileUrl={fileContent} fileName={decodedFileName} />);
-            } else if (mime === 'text/markdown' || decodedFileName.endsWith('.md') || decodedFileName.endsWith('.markdown')) {
+            setRender(<ImageViewer fileUrl={fileContent} fileName={actualFileName} />);
+            } else if (mime === 'text/markdown' || actualFileName.endsWith('.md') || actualFileName.endsWith('.markdown')) {
               
               // fileContent is now the raw text string, not a blob URL
               setRender(<MarkdownViewer content={fileContent} />);
@@ -224,7 +283,7 @@ export default function FileEditor() {
         };
         
         handleSwitchViewer();
-  }, [mime, fileContent, decodedFileName]);
+  }, [mime, fileContent, actualFileName]);
 
 
 
@@ -235,8 +294,8 @@ export default function FileEditor() {
   return (
     <div className="flex flex-col h-screen w-full bg-gray-100 dark:bg-[#0b131a]">
       <ViewNavBar 
-        currentFile={decodedFileName} 
-        FileId={decoded} 
+        currentFile={actualFileName} 
+        FileId={fileId} 
         newContent={fileContent} 
         fileMetadata={currentFileData}
       />
@@ -256,7 +315,7 @@ export default function FileEditor() {
         {/* Desktop Aside */}
         <div className="hidden lg:block">
           <ViewSide 
-            currentFile={decoded} 
+            currentFile={fileId} 
             files={files}
           />
         </div>
@@ -286,7 +345,7 @@ export default function FileEditor() {
             </div>
             <div className="h-[calc(100%-64px)] overflow-hidden">
               <ViewSide 
-                currentFile={decoded} 
+                currentFile={fileId} 
                 files={files}
                 showHeader={false}
               />
@@ -298,7 +357,7 @@ export default function FileEditor() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
             <h1 className="text-xl sm:text-2xl font-bold text-black dark:text-white truncate">
-              Viewing: {decodedFileName}
+              Viewing: {actualFileName}
             </h1>
           </div>
           <div className="flex-1 overflow-auto">

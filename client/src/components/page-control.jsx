@@ -6,6 +6,7 @@ import Dashboard from "../pages/dashboard";
 import Files from "../pages/Files";
 import { useEffect } from 'react';
 import slug from '../utils/slug';
+import SharedCenter from "../pages/share";
 
 
 export default function PageControl(){
@@ -15,7 +16,7 @@ export default function PageControl(){
     const tabContent = {
         'dashboard': <Dashboard />,
         'my-files': <Files />,
-        'shared': <div>Shared with Me Content</div>,
+        'shared': <SharedCenter />,
         'settings': <div>Settings Content</div>,
         'converter': <div>Converter Content</div>,
     }
@@ -55,7 +56,7 @@ export default function PageControl(){
 
     return (
         <div className="flex flex-row h-screen overflow-hidden">
-            {/* Sidebar with drawer functionality */}
+            {/* Sidebar with drawer  */}
             <Sidebar onTabChange={handleTabChange} />
 
             {/* Hamburger button on mobile */}
