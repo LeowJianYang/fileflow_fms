@@ -456,5 +456,35 @@ fileRoute.post('/dir', async(req,res)=>{
     
 
 });
+    fileRoute.get("/download/:fileId", (req, res) => {
+    const { fileId } = req.params;
+
+    connection.query(
+        "SELECT filepath, filename FROM fileData WHERE fileId = ?",
+        [fileId],
+        async (error, result) => {
+        if (error) {
+            return res
+            .status(500)
+            .json({ message: "Database Error", error: error.sqlState });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: "File not found" });
+        }
+
+        const filePath = result[0].filepath;  //relative
+        const fullpath = path.join(process.cwd(), filePath); // absolute path
+
+        res.sendFile(fullpath, (err) => {
+            if (err) {
+            console.error("File send error:", err);
+            return res.status(500).json({ message: "File send error" });
+            }
+        });
+        }
+    );
+    });
+
 
 export default fileRoute;

@@ -54,6 +54,25 @@ export default function Files() {
 
     }, [user, hydrated, navigate]);
 
+    const handleFileDownload = async (item) => {
+        try {
+            const response = await axios.get(`${url}/api/files/download/${item.FileId}`, {responseType:'blob', withCredentials:true});
+            const urlink = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+
+            link.href = urlink;
+            link.setAttribute('download', item.filename);
+            document.body.appendChild(link);
+            link.click();
+            toast.success('Download started');
+            window.URL.revokeObjectURL(urlink);
+            document.body.removeChild(link);
+        }
+        catch (error){
+            console.error("Error downloading file:", error);
+            toast.error('Error downloading file');
+        }
+    }
 
     const fetchFiles = async () => {
         try {
@@ -133,7 +152,8 @@ export default function Files() {
                     className="sm:flex-1"
                 />
                
-                <div className="flex flex-row gap-2 sm:gap-3 mt-2 sm:mt-0">
+                {/* Desktop View - Show all buttons */}
+                <div className="hidden sm:flex flex-row gap-2 sm:gap-3 mt-2 sm:mt-0">
                     <button className="bg-[#3f8cee] rounded-lg text-white font-semibold px-4 py-2 sm:px-6 sm:py-2.5 hover:opacity-80 transition-all duration-150 ease-in-out cursor-pointer text-sm whitespace-nowrap flex flex-row gap-3" onClick={()=>{ setUploadModalOpen(true);}}>
                         <Upload/>Upload File
                     </button>
@@ -143,6 +163,49 @@ export default function Files() {
                     <button className="bg-[#28a745] rounded-lg text-white font-semibold px-4 py-2 sm:px-6 sm:py-2.5 hover:opacity-80 transition-all duration-150 ease-in-out cursor-pointer text-sm whitespace-nowrap flex flex-row gap-3" onClick={()=>{setAddModalOpen(true)}}>
                         <Plus/>New File
                     </button>
+                </div>
+
+                
+                <div className="sm:hidden">
+                    <DropdownMenu.Root>
+                        <DropdownMenu.Trigger asChild>
+                            <button className="bg-gray-200 dark:bg-gray-700 rounded-lg p-2.5 hover:opacity-80 transition-all duration-150 ease-in-out cursor-pointer">
+                                <MoreVertical size={24} className="text-gray-900 dark:text-white" />
+                            </button>
+                        </DropdownMenu.Trigger>
+
+                        <DropdownMenu.Portal>
+                            <DropdownMenu.Content
+                                className="min-w-[200px] bg-white dark:bg-[#1b1b1b] rounded-md shadow-lg border border-gray-200 dark:border-gray-700 p-1 z-50"
+                                sideOffset={5}
+                                align="end"
+                            >
+                                <DropdownMenu.Item
+                                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded cursor-pointer outline-none"
+                                    onClick={() => setUploadModalOpen(true)}
+                                >
+                                    <Upload size={18} className="text-blue-500" />
+                                    <span className="font-medium">Upload File</span>
+                                </DropdownMenu.Item>
+                                
+                                <DropdownMenu.Item
+                                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer outline-none"
+                                    onClick={() => setCreateFolderOpen(true)}
+                                >
+                                    <FolderUp size={18} className="text-gray-600 dark:text-gray-400" />
+                                    <span className="font-medium">Create Folder</span>
+                                </DropdownMenu.Item>
+                                
+                                <DropdownMenu.Item
+                                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded cursor-pointer outline-none"
+                                    onClick={() => setAddModalOpen(true)}
+                                >
+                                    <Plus size={18} className="text-green-600" />
+                                    <span className="font-medium">New File</span>
+                                </DropdownMenu.Item>
+                            </DropdownMenu.Content>
+                        </DropdownMenu.Portal>
+                    </DropdownMenu.Root>
                 </div>
             </nav>
             <hr className="border-gray-300 dark:border-gray-700 mb-4"/>
@@ -250,6 +313,13 @@ export default function Files() {
                                                                     >
                                                                         Delete
                                                                     </DropdownMenu.Item>
+
+                                                                    <DropdownMenu.Item
+                                                                        className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer outline-none"
+                                                                        onClick={(e) => { e.stopPropagation(); handleFileDownload(item); }}
+                                                                    >
+                                                                        Download
+                                                                    </DropdownMenu.Item>
                                                                 </>
                                                             )}
                                                         </DropdownMenu.Content>
@@ -321,6 +391,12 @@ export default function Files() {
                                                             onClick={()=>{setDeleteModalOpen(true); setSelectedFile(item)}}
                                                         >
                                                             Delete
+                                                        </ContextMenu.Item>
+                                                        <ContextMenu.Item 
+                                                            className="dark:text-white text-xl text-black relative flex h-[25px] select-none items-center rounded-[3px] pl-[25px] pr-[5px] text-[13px] leading-none text-violet11 outline-none data-disabled:pointer-events-none data-highlighted:bg-[#242424] data-disabled:text-mauve8 data-highlighted:text-white" 
+                                                            onClick={()=>{handleFileDownload(item)}}
+                                                        >
+                                                            Download
                                                         </ContextMenu.Item>
                                                     </>
                                                 )}
