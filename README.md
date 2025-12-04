@@ -31,6 +31,10 @@
 - [Development Process](#development-process)
 ---
 
+> <span style="color:red;font-weight:bold;">ATTENTION</span><br/>
+> Due to the current issues, our services cannot maintain persistent storage. This project is considered for academic and demonstration purposes only.<br/>
+> **Please take note**: all data or files may be deleted or unavailable when the server or service is inactive.
+
 ## About
 
 **FileFlow** is a modern file management system that allows users to upload, organize, and manage their files with an intuitive interface. Built with cutting-edge web technologies, it provides a seamless experience for file operations with support for multiple file viewers, folder management, and user authentication.
