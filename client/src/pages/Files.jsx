@@ -12,6 +12,7 @@ import * as ContextMenu from "@radix-ui/react-context-menu";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import useHandleFileEdit from "../utils/edit-view-routes.jsx";
 import { useAppToast } from "../utils/use-toast.jsx";
+import { IoWarning } from "react-icons/io5";
 
 export default function Files() {
     const [detailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -236,6 +237,23 @@ export default function Files() {
                         <button className={`rounded-lg ${isGridView && 'bg-[#233658]' } h-10 w-10 items-center align-middle justify-center flex`} onClick={() => setIsGridView(true)}><Grid size={25} className={`${isGridView ? 'text-white ' : 'text-black dark:text-white'}`}/> </button>
                         <button className={`rounded-lg ${!isGridView && 'bg-[#233658]' } h-10 w-10 items-center align-middle justify-center flex`} onClick={() => setIsGridView(false)}><LayoutList size={25} className={`${!isGridView ? 'text-white' : 'text-black dark:text-white'}`}/></button>
                     </div>
+                </div>
+
+                <div className="border-l-4 border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 p-3 mb-6 rounded-md flex flex-col gap-2">
+                    
+                    <div className="flex flex-row items-center gap-4">
+                        <IoWarning size={32} className="text-yellow-500 mb-2"/>
+                        <p className="font-bold text-xl text-red-500">Warning</p>
+                    </div>
+               
+                    <div>
+                        
+                        <p className="text-yellow-800 dark:text-yellow-200">
+                            Due to the current issues, our services cannot maintain persistent storage. This project is considered for demonstration purposes only.<br/><br/>
+                            <b>Please take note</b>: all data or files may be deleted or unavailable when the server or service is inactive.
+                        </p>
+                    </div>
+                   
                 </div>
 
                 {filteredItems.length === 0 ? (
